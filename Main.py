@@ -2,35 +2,55 @@ import random
 import tkinter as tk
 # Python final project at kaplan
 print("Welcome to Personal Finance Tracker")
-main_window = tk.Tk()
-main_window.geometry("400x300")
-main_window.title("Personal Finance Tracker")
+root = tk.Tk()
+accountDetails = [{}]
+root.geometry("1280x720")
+root.title("Personal Finance Tracker")
+largeFont =("Roboto", 28)
+mediumFont = ("Roboto", 18)
+smallFont = ( "Roboto", 12)
+root.configure(bg="#18171c") # default window background color
+root.option_add("*Label.Background", "#18171c") # background color for all labels
+root.option_add("*Font", smallFont) # default font
+root.option_add("*foreground", "white")  # text color
+root.option_add("*Button.Background", "#36343d") # button background color
+root.option_add("*Entry*Background", "#36343d")
 
-greeting = tk.Label(main_window, text= "Welcome to our website", font=("calibri", 14))
-greeting.grid(row = 0, column=  0)
-username = tk.Label(main_window, text= "Username", font=("calibri", 14))
-username.grid(row = 1, column=  0)
-password = tk.Label(main_window, text= "Password", font=("calibri", 14))
-password.grid(row = 2, column=  0)
+greeting = tk.Label(root, text= "Personal Finance Tracker", font = largeFont, pady=5)
+greeting.grid(row = 0, column=  3, columnspan= 3, rowspan= 1)
+username = tk.Label(root, text= "Username")
+username.grid(row = 3, column=  2, padx= (10,0))
+password = tk.Label(root, text= "Password")
+password.grid(row = 4, column=  2, padx = (10,0))
 
-user_entry = tk.Entry(main_window, font=("calibri", 14))
-user_entry.grid(row = 1, column= 1)
+user_entry = tk.Entry(root)
+user_entry.grid(row = 3, column= 3)
 
-pass_entry = tk.Entry(main_window, font=("calibri", 14), show = "*")
-pass_entry.grid(row = 2, column= 1)
+pass_entry = tk.Entry(root, show = "*")
+pass_entry.grid(row = 4, column= 3)
 
-def check_pass():
+
+def checkPass(): # checks if password is correct
     if user_entry.get() == "MuradWafik" and pass_entry.get() == "123456":
         print("Login Successful")
     else:
         print("Invalid Username or Password")
 
-submit_btn = tk.Button(main_window, text = "Submit", font=("calibri", 14), command= check_pass)
-submit_btn.grid(row =3, column= 0)
+submitButton = tk.Button(root, text = "Submit", command= checkPass)
+submitButton.grid(row =5, column= 2)
 
-def clear_all():
+def clearAll():
     user_entry.delete(0, "end")
     pass_entry.delete(0, "end")
-clear_btn = tk.Button(main_window, text = "Clear", font =("calibri", 14), command= clear_all)
-clear_btn.grid(row = 3, column= 1)
-main_window.mainloop()
+clearButton = tk.Button(root, text = "Clear", command= clearAll)
+clearButton.grid(row = 5, column= 3)
+
+def signUpPage():
+    pass
+
+signUpButton = tk.Button(root, text = "Dont have an account? Click here to sign up", command = signUpPage, bg = "#18171c")
+signUpButton.grid(row = 6, column= 2, columnspan= 3)
+signUpButton.configure(borderwidth=0)
+
+
+root.mainloop()
