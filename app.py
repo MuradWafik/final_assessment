@@ -45,28 +45,40 @@ def showExpenseBox():
     expenseEntry.place(rely = 0.3, relx = 0.60, anchor= "center", width= 80)
     submitExpenseButton.place(rely = 0.375, relx = 0.60, anchor = "center")
 
-
-def addIncome(oldBalance):
+def test():
+    print(balance)
+def addIncome():
+    global balance
+    incomeEntry.pack_forget()
+    submitIncomeButton.pack_forget()
     try:
-        newbalance = oldBalance + float(incomeEntry.get())
+        balance +=int(incomeEntry.get())
     except:
         errorMessage()
-    return newbalance
 
-def addExpense(oldBalance):
+    updateBalance()
+
+
+
+def addExpense():
+    global balance
     try:
-        newbalance = oldBalance - float(expenseEntry.get())
+        balance -= int(expenseEntry.get())
     except:
         errorMessage
-    return newbalance
-        
+    updateBalance()
+
+def updateBalance():
+    global balanceLbl
+    global balance
+    balanceLbl["text"] ="Balance:\n "+ str(balance) + "$" 
 
 addMoneyBtn = tk.Button(root, text = "Report Income", command = showIncomeBox)
 addMoneyBtn.place(rely=0.25, relx=0.40, anchor= "center")
-submitIncomeButton = tk.Button(root, text="Submit",command=lambda:addIncome(balance))  
+submitIncomeButton = tk.Button(root, text="Submit",command=addIncome)  
 
 subMoneyBtn = tk.Button(root, text = "Report Expense", command = showExpenseBox)
 subMoneyBtn.place(rely=0.25, relx=0.60, anchor= "center")
-submitExpenseButton = tk.Button(root, text="Submit",command=lambda:addExpense(balance))  
+submitExpenseButton = tk.Button(root, text="Submit",command=addExpense)  
 
 root.mainloop()
