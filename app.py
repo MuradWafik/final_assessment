@@ -10,50 +10,65 @@ mediumFont = ("Roboto", 18)
 smallFont = ("Roboto", 12)
 balance = 0
 #add button to show COMPLETE transaction and balance history when clicked later
-# fix balance list tk.text not working without manual width since that bugs with large  amounts of text/numbers
+
 titleLbl = tk.Label(root, text= "Personal Finance Tracker", font= largeFont)
 titleLbl.place(relx=0.5, rely = 0.05, anchor = tk.CENTER)
 balanceLbl = tk.Label(root, text="Balance:\n "+ str(balance) + "$" , font=largeFont)
 balanceLbl.place(relx=0.5, rely=0.15, anchor=tk.CENTER)
 transactionLbl = tk.Label(root, text= "Transaction History", font = mediumFont)
-transactionLbl.place(relx=0.6, rely= 0.45, anchor= "center")
+transactionLbl.place(relx=0.8, rely= 0.45, anchor= "center")
 balanceHistoryLbl = tk.Label(root, text= "Balance History", font = mediumFont)
-balanceHistoryLbl.place(relx=0.4, rely=0.45, anchor="center")
+balanceHistoryLbl.place(relx=0.2, rely=0.45, anchor="center")
 
 # list for transaction and balance
 # since its tk.text i disable so user cant change but allows program to add to it and change color
 # such as red color if withdrawl or green if deposit
-transactionList = tk.Text(root, font=smallFont, state= "disabled", height= 5, background= "#F0F0F0", border= 0)
+transactionList = tk.Text(root, font=smallFont, state= "disabled", height= 5, width = 40,  border= 0, background= "#F0F0F0")
 transactionList.tag_configure("income", foreground="green", justify = tk.CENTER)
 transactionList.tag_configure("expense", foreground="red", justify = tk.CENTER)
-transactionList.place(relx=0.6, rely=0.6, anchor=tk.CENTER)
-balanceList = tk.Text(root, font=smallFont, state= "disabled", height= 5, width= 4, background= "#F0F0F0", border= 0)
-balanceList.place(relx=0.4, rely=0.6, anchor=tk.CENTER)
-
-
-
-# def transactionHistory(bal, operation, balanceHistory = None,  tranHistory = None): # list to store transaction history that will be displayed
-
-#     if tranHistory == None:
-#         tranHistory == [operation]
-#     else:
-#         tranHistory.append(operation)
-    
-# def balanceHistory(bal, balHistory = None): # list to store balance history to be displayed
-#     if balHistory == None:
-#         balHistory = [bal]
-#     else:
-#         balHistory.appened(bal)
-    
-    
+transactionList.place(relx=0.8, rely=0.6, anchor=tk.CENTER)
+balanceList = tk.Text(root, font=smallFont, state= "disabled", height= 5, width= 40, border= 0, background= "#F0F0F0")
+balanceList.place(relx=0.2, rely=0.6, anchor=tk.CENTER)
+balanceList.tag_configure("basic", justify=tk.CENTER)
 
 incomeEntry = tk.Entry(root, font= smallFont, justify= "center")
 expenseEntry = tk.Entry(root, width=10, font= smallFont)
 transactionHistory = []
 balanceHistory = []
+incomeGained = {
+    "Salary": 0,
+    "Pension": 0,
+    "Interest": 0,
+    "Others": 0
+}
+
+expenseSpent = {
+    "Food": 0,
+    "Rent": 0,
+    "Clothing": 0,
+    "Car":0,
+    "Health":0, 
+    "Others":0
+}
+incomeTypes = [
+    "Salary", 
+    "Pension",
+    "Interest",
+    "Others"
+]
+expenseTypes = [
+    "Food",
+    "Rent",
+    "Clothing",
+    "Car",
+    "Health", 
+    "Others"
+]
 def showIncomeBox(): # function for button to add income,  calls the entry box and button to submit
-    incomeEntry.place(rely = 0.3, relx = 0.40, anchor= "center", width= 80)
-    submitIncomeButton.place(rely = 0.375, relx = 0.40, anchor = "center")
+    incomeEntry.place(rely = 0.35, relx = 0.30, anchor= "center", width= 80)
+    submitIncomeButton.place(rely = 0.4, relx = 0.30, anchor = "center")
+    incomeDropdown.place(rely = 0.35, relx = 0.45, anchor = tk.CENTER)
+    #incomeTypeLabel.place(rely = 0.3, relx =0.45, anchor = tk.CENTER)
 
 
 def errorMessage(): # if an error arises this function is called, ie a string inputted instead of int
@@ -61,8 +76,12 @@ def errorMessage(): # if an error arises this function is called, ie a string in
 
 
 def showExpenseBox(): # function for button to add income,  calls the entry box and button to submit
-    expenseEntry.place(rely = 0.3, relx = 0.60, anchor= "center", width= 80)
-    submitExpenseButton.place(rely = 0.375, relx = 0.60, anchor = "center")
+    expenseEntry.place(rely = 0.35, relx = 0.70, anchor= "center", width= 80)
+    submitExpenseButton.place(rely = 0.4, relx = 0.70, anchor = "center")
+
+
+    expenseDropdown.place(rely = 0.35, relx = 0.85, anchor = tk.CENTER)
+    #expenseTypeLabel.place(rely = 0.3, relx =0.85, anchor = tk.CENTER)
 
 def test():
     print(balance)
@@ -71,16 +90,20 @@ def addIncome(): # once income is added new balance is calculated
     global balance
     global transactionHistory
     global balanceHistory
-    incomeEntry.pack_forget()
-    submitIncomeButton.pack_forget()
-    try:
-        balance +=int(incomeEntry.get())
-        transactionHistory.append(incomeEntry.get())
-        balanceHistory.append(balance)
-    except:
+    incType = incomeOptionChosen.get() # type for the dictionary ie from salary, pension ...
+    if incType not in incomeTypes: # if they didnt pick a type from options possible like the default value
         errorMessage()
+    else:
+        incomeGained[incType]+= int(incomeEntry.get()) # updates dictionary for that type
+        print(incomeGained)
 
-    updateBalance("income") # updates balance on top and history lists since they dont auto change
+        try:
+            balance +=int(incomeEntry.get()) # regular balance update and adding  to history
+            transactionHistory.append(incomeEntry.get())
+            balanceHistory.append(balance)
+        except:
+            errorMessage()
+    updateBalance("income") # updates visual balance on top and history lists since they dont auto change
     # uses income as entry type so text for transaction is green
 
 
@@ -89,12 +112,17 @@ def addExpense(): # same as income but expense
     global balance
     global transactionHistory
     global balanceHistory
-    try:
-        balance += -int(expenseEntry.get())
-        transactionHistory.append(expenseEntry.get())
-        balanceHistory.append(balance)
-    except:
+    expType = expenseOptionChosen.get()
+    if expType not in expenseTypes:
         errorMessage()
+    else:
+        expenseSpent[expType]+= -int(expenseEntry.get())
+        try:
+            balance += -int(expenseEntry.get())
+            transactionHistory.append(expenseEntry.get())
+            balanceHistory.append(balance)
+        except:
+            errorMessage()
     updateBalance("expense")
 
 def updateBalance(transactionType): 
@@ -105,7 +133,8 @@ def updateBalance(transactionType):
     textAmmount = str(transactionHistory[-1]) # the last transaction but converted to string
     transactionList.config(state= 'normal')
     balanceList.config(state="normal") # allow the lists to be modified so the latest transactions and balance are added in program
-    balanceList.insert(tk.END, balance)
+    balanceList.insert(tk.END, balance, "basic")
+
     if transactionType == "income":
         transactionList.insert(tk.END, "+" + textAmmount, "income")  # income tag so its green
     else:
@@ -124,17 +153,37 @@ def submissionRemove(type): # clear entry box and remove buttons after use
         submitIncomeButton.place_forget()
         incomeEntry.delete(0,tk.END)
         incomeEntry.place_forget()
+        incomeDropdown.place_forget()
+        #incomeTypeLabel.place_forget()
     else: # clears the expense widgets 
         submitExpenseButton.place_forget()
         expenseEntry.delete(0,tk.END)
         expenseEntry.place_forget()
+        expenseDropdown.place_forget()
+        #expenseTypeLabel.place_forget()
 
-addMoneyBtn = tk.Button(root, text = "Report Income", command = showIncomeBox)
-addMoneyBtn.place(rely=0.25, relx=0.40, anchor= "center")
+
+        
+
+def categorizeExpense():
+    pass
+
+addMoneyBtn = tk.Button(root, text = "Report Income", bg ="#e0dede", font = mediumFont,command = showIncomeBox) # dropdown will show here
+addMoneyBtn.place(rely=0.25, relx=0.30, anchor= "center")
 submitIncomeButton = tk.Button(root, text="Submit",command=lambda: [addIncome(),submissionRemove("increase")])  
 
-subMoneyBtn = tk.Button(root, text = "Report Expense", command = showExpenseBox)
-subMoneyBtn.place(rely=0.25, relx=0.60, anchor= "center")
-submitExpenseButton = tk.Button(root, text="Submit",command=lambda: [addExpense(),submissionRemove("expense")])
+subMoneyBtn = tk.Button(root, text = "Report Expense", bg ="#e0dede",font= mediumFont, command = showExpenseBox)
+subMoneyBtn.place(rely=0.25, relx=0.70, anchor= "center")
+submitExpenseButton = tk.Button(root, text="Submit",command=lambda: [addExpense(),submissionRemove("expense"),categorizeExpense()])
+
+incomeOptionChosen = tk.StringVar(value = None)
+incomeDropdown = tk.OptionMenu(root, incomeOptionChosen, *incomeTypes)
+incomeOptionChosen.set("Select Income Type")
+#incomeTypeLabel = tk.Label(root, text = "Select Income Type", font = smallFont)
+
+expenseOptionChosen = tk.StringVar(value = "Select Expense Type")
+expenseDropdown = tk.OptionMenu(root, expenseOptionChosen, *expenseTypes)
+
+#expenseTypeLabel = tk.Label(root, text ="Select Expense Type", font = smallFont)
 
 root.mainloop()
