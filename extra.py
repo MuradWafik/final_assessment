@@ -72,3 +72,46 @@ logInPage.tkraise()
 
 root.mainloop()
 
+
+
+
+# expensePieChart = plt.subplot(0,1,1)
+    #     expText = list(expenseSpent.items())
+    #     expFinal = []
+    #     for expense in expText:
+    #         end = str(expense)
+    #         end = end.replace("(", "")
+    #         end = end.replace(")", "") # its saved as a tuple such as ("name", amount) so we need to remove these
+    #         end = end.replace("'","")
+    #         end += "$"
+
+    #         expFinal.append(end)
+    #     expLabels = expFinal
+    #     sizes = list(expenseSpent.values())
+    #     expensePieChart.clear()  # Clear the previous plot
+    #     expensePieChart.pie(sizes, labels=expLabels, autopct='%1.1f%%', startangle=90)
+    #     expensePieChart.axis('equal')
+    #     expensePieChart.set_title("Expense pie chart")
+    #     expensePieChart.set_position([0, 0.6, 0.4, 0.4])
+    # if graphType =="income":
+    #     incomePieChart = fig.add_subplot(1,2,2)
+    #     incText = list(incomeGained.items())
+    #     incFinal = []
+    #     for income in incText:
+    #         end1 = str(income)
+    #         end1 = end1.replace("(", "")
+    #         end1 = end1.replace(")", "") # its saved as a tuple such as ("name", amount) so we need to remove these
+    #         end1 = end1.replace("'","")
+    #         end1 += "$"
+    
+    #         incFinal.append(end)
+    #     incLabels = incFinal
+    #     sizes = list(incomeGained.values())
+    #     incomePieChart.clear()  # Clear the previous plot
+    #     incomePieChart.pie(sizes, labels=incLabels, autopct='%1.1f%%', startangle=90)
+    #     incomePieChart.axis('equal')
+    #     incomePieChart.set_title("Income pie chart")
+    #     incomePieChart.set_position([0.6, 0.6, 0.4, 0.4])
+
+
+# extra stuff in case to draw pie charts
