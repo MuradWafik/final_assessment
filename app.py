@@ -11,20 +11,50 @@ root.geometry("1280x720")
 root.title("Personal Finance Tracker")
 
 notebook = ttk.Notebook(root)
-notebook.pack(pady=5, expand= True)
+notebook.pack(pady=5, expand= True, fill ='both')
+greeting_page = ttk.Frame(notebook, width= 1280, height = 720)
+greeting_page.pack(expand= True, fill= "both")
 home_page = ttk.Frame(notebook, width= 1280, height = 720)
 home_page.pack(expand=True, fill="both")
 summary_page = ttk.Frame(notebook, width= 1280, height = 720)
 summary_page.pack(expand=True, fill="both")
+
+# page for recording transactions 
+transaction_page = ttk.Frame(root, width = 1280, height= 720)
+# transaction_page.pack(expand= True, fill= "both")
+notebook.add(greeting_page, text = "Greeting")
 notebook.add(home_page, text = "Home")
 notebook.add(summary_page, text = "Summary")
+largestFont = ("Roboto", 36)
 largeFont = ("Roboto", 28)
 mediumFont = ("Roboto", 18)
 smallFont = ("Roboto", 12)
 balance = 0
+welcomeLbl = tk.Label(greeting_page, text = "Welcome to the\nPersonal Finance Tracker", font = largestFont)
+welcomeLbl.place(relx=0.5, rely = 0.1, anchor= tk.CENTER)
+
+def onResize(event):
+    curWidth = event.width
+    curHeight = event.height
+    notebook.config(width=curWidth, height=curHeight)
+
+def showName():
+    userName = nameEntry.get()
+    enterNameLbl.config(text= "Welcome " + userName)
+    nameEntry.place_forget()
+    submitName.place_forget()
+    nameHome = tk.Label(home_page, text = userName + "'s personal finance tracker", font = smallFont )
+    nameHome.place(relx = 0.1, rely = 0.05, anchor= tk.CENTER)
+enterNameLbl = tk.Label(greeting_page, text = "Enter your name ", font = largeFont)
+enterNameLbl.place(relx=0.5, rely = 0.3, anchor= tk.CENTER)
+
+nameEntry = tk.Entry(greeting_page, font = mediumFont)
+nameEntry.place(relx = 0.5, rely = 0.45, anchor = tk.CENTER)
+submitName = tk.Button(greeting_page, text= "Submit Name", font = mediumFont, command = showName)
+submitName.place(relx=0.65, rely = 0.45, anchor= tk.CENTER)
 
 # for some reason if input is wrong like being string it now shows error but adds repeats the previous value to list instead cancelling despite the try and except
-titleLbl = tk.Label(home_page, text= "Personal Finance Tracker", font= largeFont)
+titleLbl = tk.Label(home_page, text= "Home Page", font= largeFont)
 titleLbl.place(relx=0.5, rely = 0.05, anchor = tk.CENTER)
 balanceLbl = tk.Label(home_page, text="Balance:\n "+ str(balance) + "$" , font=largeFont)
 balanceLbl.place(relx=0.5, rely=0.15, anchor=tk.CENTER)
@@ -34,6 +64,8 @@ balanceHistoryLbl = tk.Label(home_page, text= "Balance History", font = mediumFo
 balanceHistoryLbl.place(relx=0.2, rely=0.45, anchor="center")
 transactionIdLbl = tk.Label(home_page, text= "Transaction ID", font = ["Roboto", 14] )
 transactionIdLbl.place(relx=0.9, rely= 0.45, anchor= "center")
+
+
 
 # list for transaction and balance
 # since its tk.text i disable so user cant change but allows program to add to it and change color
@@ -78,6 +110,14 @@ expenseTypes = [
     "Health", 
     "Others"
 ]
+
+def show_page(page_to_show, page_to_hide): # function to switch pages
+    for widget in page_to_hide.winfo_children(): # this is how to iterate through the elements/widgets in a page
+        widget.place_forget() # removes that widget to show other page
+        
+    # Show the new page
+    page_to_show.pack(expand=True, fill='both')
+
 def updateIncomeGraph():
     
     plt.subplot(1,2,1)
@@ -210,7 +250,7 @@ def updateBalance(transactionType):
     global transactionHistory
     global balanceHistory
     global transactionDict
-    balanceLbl.config(text="Balance:\n "+ str(balanceHistory[-1]), justify = tk.CENTER) # the balance at the top is updated with new value
+    balanceLbl.config(text="Balance:\n $"+ str(balanceHistory[-1]), justify = tk.CENTER) # the balance at the top is updated with new value
     textAmmount = str(transactionHistory[-1]) # the last transaction but converted to string
     transactionTextBox.config(state= 'normal')
     balanceList.config(state="normal") # allow the lists to be modified so the latest transactions and balance are added in program
@@ -257,7 +297,14 @@ def submissionRemove(type): # clear entry box and remove buttons after use
         #expenseTypeLabel.place_forget()      
 
 # buttons to report income starting actions, and submit button, each with functions
-addMoneyBtn = tk.Button(home_page, text = "Report Income", bg ="#e0dede", font = mediumFont,command = showIncomeBox) # dropdown will show here
+        
+reportTransactionBtn = tk.Button(home_page, text = "Report Transaction", bg = "#e0dede", font = mediumFont, command= lambda:show_page(transaction_page, home_page))
+reportTransactionBtn.place(relx= 0.5, rely= 0.25, anchor= "center")
+
+# change it for report transaction page,  user has either button or dropdown..
+# then it shows either the add or sub money, same page maybe just places diff depending on option
+# home page only balance, report transaction , and history
+addMoneyBtn = tk.Button(transaction_page, text = "Report Income", bg ="#e0dede", font = mediumFont,command = showIncomeBox) # dropdown will show here
 addMoneyBtn.place(rely=0.25, relx=0.30, anchor= "center")
 submitIncomeButton = tk.Button(home_page, text="Submit",command=lambda: [addIncome(),submissionRemove("increase")])  
 
@@ -298,4 +345,12 @@ def quitApplication(): # doesnt end runtime by default when closing
     root.quit()
     root.destroy()
 root.protocol("WM_DELETE_WINDOW", quitApplication)
+
+# transaction page, changing it from all on the home
+
+
+
+
+
+root.bind("<Configure>", onResize)  # lets the frames (tabs for diff pages) resize with the window
 root.mainloop()
