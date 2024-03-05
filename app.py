@@ -9,7 +9,7 @@ root = tk.Tk()
 #accountDetails = [{}]
 root.geometry("1280x720")
 root.title("Personal Finance Tracker")
-
+# no notebook, fra es
 notebook = ttk.Notebook(root)
 notebook.pack(pady=5, expand= True, fill ='both')
 greeting_page = ttk.Frame(notebook, width= 1280, height = 720)
@@ -21,10 +21,13 @@ summary_page.pack(expand=True, fill="both")
 
 # page for recording transactions 
 transaction_page = ttk.Frame(root, width = 1280, height= 720)
+
 # transaction_page.pack(expand= True, fill= "both")
 notebook.add(greeting_page, text = "Greeting")
 notebook.add(home_page, text = "Home")
 notebook.add(summary_page, text = "Summary")
+notebook.add(transaction_page, text="Report Transactions")
+
 largestFont = ("Roboto", 36)
 largeFont = ("Roboto", 28)
 mediumFont = ("Roboto", 18)
@@ -33,25 +36,38 @@ balance = 0
 welcomeLbl = tk.Label(greeting_page, text = "Welcome to the\nPersonal Finance Tracker", font = largestFont)
 welcomeLbl.place(relx=0.5, rely = 0.1, anchor= tk.CENTER)
 
-def onResize(event):
+def onResize(event): # makes the tabs change size with window
     curWidth = event.width
     curHeight = event.height
     notebook.config(width=curWidth, height=curHeight)
 
+def showHomePage():
+    notebook.select(1)
+
+
 def showName():
     userName = nameEntry.get()
-    enterNameLbl.config(text= "Welcome " + userName)
-    nameEntry.place_forget()
-    submitName.place_forget()
-    nameHome = tk.Label(home_page, text = userName + "'s personal finance tracker", font = smallFont )
+    # enterNameLbl.config(text= "Welcome " + userName)
+    # nameEntry.place_forget()
+    # submitName.place_forget()
+    print(userName)
+    nameHome = tk.Label(home_page, font = smallFont )
+    if len(userName) != 0: # if the entry for user name is empty
+        nameHome.config(text = userName + "'s personal finance tracker",)
+    else:
+        nameHome.config(text = "Your personal finance tracker")
+    
     nameHome.place(relx = 0.1, rely = 0.05, anchor= tk.CENTER)
 enterNameLbl = tk.Label(greeting_page, text = "Enter your name ", font = largeFont)
 enterNameLbl.place(relx=0.5, rely = 0.3, anchor= tk.CENTER)
 
 nameEntry = tk.Entry(greeting_page, font = mediumFont)
 nameEntry.place(relx = 0.5, rely = 0.45, anchor = tk.CENTER)
-submitName = tk.Button(greeting_page, text= "Submit Name", font = mediumFont, command = showName)
+
+submitName = tk.Button(greeting_page, text= "Submit Name", font = smallFont, width = 16, command = lambda: [showHomePage(), showName(), notebook.hide(0)] )
 submitName.place(relx=0.65, rely = 0.45, anchor= tk.CENTER)
+
+submitName.place(relx=0.5, rely = 0.55, anchor= tk.CENTER)
 
 # for some reason if input is wrong like being string it now shows error but adds repeats the previous value to list instead cancelling despite the try and except
 titleLbl = tk.Label(home_page, text= "Home Page", font= largeFont)
@@ -83,8 +99,8 @@ transHistoryList = tk.Text(home_page, font = smallFont, state= "disabled",height
 transHistoryList.place(relx=0.9, rely=0.6, anchor=tk.CENTER)
 transHistoryList.tag_configure("basic", justify=tk.CENTER)
 
-incomeEntry = tk.Entry(home_page, font= smallFont, justify= "center")
-expenseEntry = tk.Entry(home_page, width=10, font= smallFont)
+incomeEntry = tk.Entry(transaction_page, font= mediumFont, justify= "center")
+expenseEntry = tk.Entry(transaction_page, width=10, font= mediumFont)
 
 
 transactionHistory = [] # last index will be used when adding new transactions
@@ -111,63 +127,46 @@ expenseTypes = [
     "Others"
 ]
 
-def show_page(page_to_show, page_to_hide): # function to switch pages
-    for widget in page_to_hide.winfo_children(): # this is how to iterate through the elements/widgets in a page
-        widget.place_forget() # removes that widget to show other page
-        
-    # Show the new page
-    page_to_show.pack(expand=True, fill='both')
 
-def updateIncomeGraph():
-    
+
+def updateGraph(): # updates both no matter what so they both always show
+    fig = plt.figure() # has to remake from scratch so they dont just draw them over eachother 
+    canvas = FigureCanvasTkAgg(fig, summary_page)
+    canvas.get_tk_widget().place(relx=0.5, rely=0.5, anchor= tk.CENTER)
     plt.subplot(1,2,1)
     labels = list(incomeGained.keys())
     sizes = list(incomeGained.values())
     plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
     plt.title("Income Pie Chart")
-
-def updateExpenseGraph():
-
     plt.subplot(1,2,2)
     labels = list(expenseSpent.keys())
     sizes = list(expenseSpent.values())
     plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
     plt.title("Expense Pie Chart")
-def updateGraph(graphType):
-    if graphType == "income":
-        updateIncomeGraph()
-    elif graphType == "expense":
-        updateExpenseGraph()
+
     canvas.draw()  # redraw so visuals are right
 
 
-fig = plt.figure()
-canvas = FigureCanvasTkAgg(fig, summary_page)
-canvas.get_tk_widget().place(relx=0.25, rely=0.25)
-
-
-
 def showIncomeBox(): # function for button to add income,  calls the entry box and button to submit
-    incomeEntry.place(rely = 0.35, relx = 0.30, anchor= "center", width= 80)
-    submitIncomeButton.place(rely = 0.4, relx = 0.30, anchor = "center")
-    incomeDropdown.place(rely = 0.35, relx = 0.45, anchor = tk.CENTER)
-    #incomeTypeLabel.place(rely = 0.3, relx =0.45, anchor = tk.CENTER)
-    incomeDate.place(relx = 0.15, rely = 0.35, anchor = tk.CENTER)
-    incomeDateLbl.place(relx = 0.15, rely = 0.315, anchor= tk.CENTER)
+    noTransactionTypeBtn.place_forget() # hides the default message saying there is no transaction type
+    incomeEntry.place(rely = 0.35, relx = 0.50, anchor= "center", width= 100)
+    submitIncomeButton.place(rely = 0.425, relx = 0.50, anchor = "center")
+    incomeDropdown.place(rely = 0.35, relx = 0.70, anchor = tk.CENTER)
+    incomeDate.place(relx = 0.35, rely = 0.35, anchor = tk.CENTER)
+    incomeDateLbl.place(relx = 0.35, rely = 0.315, anchor= tk.CENTER)
 
 def errorMessage(): # if an error arises this function is called, ie a string inputted instead of int
     messagebox.showerror('Invalid Input', "Please enter a valid input")
 
 
 def showExpenseBox(): # function for button to add income,  calls the entry box and button to submit
-    expenseEntry.place(rely = 0.35, relx = 0.70, anchor= "center", width= 80)
-    submitExpenseButton.place(rely = 0.4, relx = 0.70, anchor = "center")
+    noTransactionTypeBtn.place_forget()
+    expenseEntry.place(rely = 0.35, relx = 0.50, anchor= "center", width= 100)
+    submitExpenseButton.place(rely = 0.425, relx = 0.50, anchor = "center")
+    expenseDropdown.place(rely = 0.35, relx = 0.70, anchor = tk.CENTER)
+    expenseDate.place(relx = 0.35, rely = 0.35, anchor = tk.CENTER )
+    expenseDateLbl.place(relx = 0.35, rely = 0.315, anchor= tk.CENTER)
 
-
-    expenseDropdown.place(rely = 0.35, relx = 0.55, anchor = tk.CENTER)
-    expenseDate.place(relx = 0.85, rely = 0.35, anchor = tk.CENTER )
-    expenseDateLbl.place(relx = 0.85, rely = 0.315, anchor= tk.CENTER)
-    #expenseTypeLabel.place(rely = 0.3, relx =0.85, anchor = tk.CENTER)
 
 
 
@@ -195,7 +194,7 @@ def addIncome(): # once income is added new balance is calculated
             # print(incomeGained)
 
             incomeSubmittedDate = incomeDate.get()
-            tempIncomeDict = {"transaction_id": transactionID, "transaction_type": "income", "transaction_value": incomeEntry.get(),
+            tempIncomeDict = {"transaction_id": transactionID, "transaction_type": "income", "transaction_value": incomeEntry.get(), # adds info to dict
                               "income_category": incType, "income_date": incomeSubmittedDate}
             fullTransactionData.append(tempIncomeDict)
             
@@ -203,8 +202,10 @@ def addIncome(): # once income is added new balance is calculated
 
         except:
             errorMessage()
+    noTransactionTypeBtn.place(relx = 0.5, rely = 0.3, anchor= tk.CENTER)
     updateBalance("income") # updates visual balance on top and history lists since they dont auto change
-    updateGraph("income") # updates the visual graphs
+    updateGraph() # updates the visual graphs
+    notebook.select(1)
     # uses income as entry type so text for transaction is green
 
 
@@ -224,7 +225,7 @@ def addExpense(): # same as income but expense
             else:
                 expenseSpent[expType]+= int(expenseEntry.get()) # should it be a negative or positive in expense category dictionary
 
-        
+
             balance += -int(expenseEntry.get())
             transactionHistory.append(expenseEntry.get())
             balanceHistory.append(balance)
@@ -241,8 +242,10 @@ def addExpense(): # same as income but expense
 
         except:
             errorMessage()
+    noTransactionTypeBtn.place(relx = 0.5, rely = 0.3, anchor= tk.CENTER)
+    notebook.select(1)
     updateBalance("expense")
-    updateGraph("expense")
+    updateGraph()
 
 def updateBalance(transactionType): 
     print(fullTransactionData)
@@ -250,7 +253,7 @@ def updateBalance(transactionType):
     global transactionHistory
     global balanceHistory
     global transactionDict
-    balanceLbl.config(text="Balance:\n $"+ str(balanceHistory[-1]), justify = tk.CENTER) # the balance at the top is updated with new value
+    balanceLbl.config(text="Balance:\n "+ str(balanceHistory[-1])+"$", justify = tk.CENTER) # the balance at the top is updated with new value
     textAmmount = str(transactionHistory[-1]) # the last transaction but converted to string
     transactionTextBox.config(state= 'normal')
     balanceList.config(state="normal") # allow the lists to be modified so the latest transactions and balance are added in program
@@ -297,50 +300,66 @@ def submissionRemove(type): # clear entry box and remove buttons after use
         #expenseTypeLabel.place_forget()      
 
 # buttons to report income starting actions, and submit button, each with functions
+    
+# reportTransactionBtn = tk.Button(home_page, text = "Report Transaction", bg = "#e0dede", font = mediumFont, command= lambda:notebook.select(3))
+# reportTransactionBtn.place(relx= 0.5, rely= 0.25, anchor= "center")
+
+def showTransactionPageType(event):
+    notebook.select(3)
+    if transactionChosen.get() == "Income":
+        showIncomeBox()
+    elif transactionChosen.get() == "Expense":
+        showExpenseBox()
+    
+    transactionChosen.set("Select Transaction Type")
+
+reportTransactionLbl = tk.Label(home_page, text= "Report Transaction:", font = largeFont)
+reportTransactionLbl.place(relx = 0.5, rely = 0.3, anchor= tk.CENTER)
         
-reportTransactionBtn = tk.Button(home_page, text = "Report Transaction", bg = "#e0dede", font = mediumFont, command= lambda:show_page(transaction_page, home_page))
-reportTransactionBtn.place(relx= 0.5, rely= 0.25, anchor= "center")
+transactionChosen = tk.StringVar(value = "Select Transaction Type")
+transactionTypes = ["Income", "Expense"]
+transactionDropdown = tk.OptionMenu(home_page, transactionChosen, *transactionTypes, command= showTransactionPageType)
+transactionDropdown.config(font = mediumFont)
+transactionDropdown.place(relx = 0.5, rely = 0.375, anchor= tk.CENTER)
 
-# change it for report transaction page,  user has either button or dropdown..
-# then it shows either the add or sub money, same page maybe just places diff depending on option
-# home page only balance, report transaction , and history
-addMoneyBtn = tk.Button(transaction_page, text = "Report Income", bg ="#e0dede", font = mediumFont,command = showIncomeBox) # dropdown will show here
-addMoneyBtn.place(rely=0.25, relx=0.30, anchor= "center")
-submitIncomeButton = tk.Button(home_page, text="Submit",command=lambda: [addIncome(),submissionRemove("increase")])  
 
-subMoneyBtn = tk.Button(home_page, text = "Report Expense", bg ="#e0dede",font= mediumFont, command = showExpenseBox)
-subMoneyBtn.place(rely=0.25, relx=0.70, anchor= "center")
-submitExpenseButton = tk.Button(home_page, text="Submit",command=lambda: [addExpense(),submissionRemove("expense")])
+transactionPageTitle = tk.Label(transaction_page, text = "Transaction Page", font = largeFont)
+transactionPageTitle.place(relx= 0.5, rely = 0.05, anchor= tk.CENTER)
+
+noTransactionTypeBtn = tk.Button(transaction_page, text = "It seems like you don't have a transaction type chosen\n Click here to go to home page",
+                                 font = largeFont, borderwidth=0, command= lambda: notebook.select(1))
+noTransactionTypeBtn.place(relx = 0.5, rely = 0.3, anchor= tk.CENTER)
+
+
+submitIncomeButton = tk.Button(transaction_page, font = mediumFont, text="Submit",command=lambda: [addIncome(),submissionRemove("increase")])  
+submitExpenseButton = tk.Button(transaction_page,font = mediumFont, text="Submit",command=lambda: [addExpense(), submissionRemove("expense")])
+
 
 #dropdown menues
-incomeOptionChosen = tk.StringVar(value = None)
-incomeDropdown = tk.OptionMenu(home_page, incomeOptionChosen, *incomeTypes)
-incomeOptionChosen.set("Select Income Type")
-#incomeTypeLabel = tk.Label(root, text = "Select Income Type", font = smallFont)
+incomeOptionChosen = tk.StringVar(value = "Select Income Type")
+incomeDropdown = tk.OptionMenu(transaction_page, incomeOptionChosen, *incomeTypes) # like *args, taking in all income types for dropdown
+incomeDropdown.config(font = mediumFont)
+
 
 expenseOptionChosen = tk.StringVar(value = "Select Expense Type")
-expenseDropdown = tk.OptionMenu(home_page, expenseOptionChosen, *expenseTypes)
+expenseDropdown = tk.OptionMenu(transaction_page, expenseOptionChosen, *expenseTypes)
+expenseDropdown.config(font = mediumFont)
 
-incomeDate = DateEntry(home_page)
+incomeDate = DateEntry(transaction_page)
+incomeDateLbl = tk.Label(transaction_page,text = "Enter Transaction Date", font = smallFont)
 
-incomeDateLbl = tk.Label(home_page,text = "Enter Transaction Date", font = smallFont)
-
-
-
-
-expenseDate = DateEntry(home_page)
-
-expenseDateLbl = tk.Label(home_page, text = "Enter Transaction Date", font = smallFont)
+expenseDate = DateEntry(transaction_page)
+expenseDateLbl = tk.Label(transaction_page, text = "Enter Transaction Date", font = smallFont)
 
 
-#expenseTypeLabel = tk.Label(root, text ="Select Expense Type", font = smallFont)
+
 
 
 
 
 #2ND PAGE PLT
 dashLbl = tk.Label(summary_page, text = "Dashboard", font = largeFont)
-dashLbl.place(relx= 0.5, rely = 0.1, anchor= tk.CENTER)
+dashLbl.place(relx= 0.5, rely = 0.05, anchor= tk.CENTER)
 def quitApplication(): # doesnt end runtime by default when closing
     root.quit()
     root.destroy()
