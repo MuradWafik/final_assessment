@@ -1,10 +1,12 @@
 # ignoring log in for now balance page and others
 import tkinter as tk
-from tkinter import messagebox, ttk
-import random
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from tkcalendar import DateEntry
+from tkinter import messagebox, ttk 
+import random # random transaction id
+import matplotlib.pyplot as plt # regular graphs
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg # to show on tkinter
+from tkcalendar import DateEntry # for date of transaction
+from matplotlib.widgets import RangeSlider  # slider for dates when filtering graphs gonna add
+import datetime # helps filter the dates
 root = tk.Tk()
 #accountDetails = [{}]
 root.geometry("1280x720")
@@ -18,6 +20,8 @@ home_page = ttk.Frame(notebook, width= 1280, height = 720)
 home_page.pack(expand=True, fill="both")
 summary_page = ttk.Frame(notebook, width= 1280, height = 720)
 summary_page.pack(expand=True, fill="both")
+full_history_page = ttk.Frame(notebook, width= 1280, height= 720)
+full_history_page.pack(expand=True, fill="both")
 
 # page for recording transactions 
 transaction_page = ttk.Frame(root, width = 1280, height= 720)
@@ -26,7 +30,13 @@ transaction_page = ttk.Frame(root, width = 1280, height= 720)
 notebook.add(greeting_page, text = "Greeting")
 notebook.add(home_page, text = "Home")
 notebook.add(summary_page, text = "Summary")
+notebook.add(full_history_page, text = "Full Transaction History")
 notebook.add(transaction_page, text="Report Transactions")
+
+notebook.hide(1)
+notebook.hide(2)
+notebook.hide(3)
+notebook.hide(4)
 
 largestFont = ("Roboto", 36)
 largeFont = ("Roboto", 28)
@@ -42,6 +52,9 @@ def onResize(event): # makes the tabs change size with window
     notebook.config(width=curWidth, height=curHeight)
 
 def showHomePage():
+    notebook.add(home_page, text = "Home")
+    notebook.add(summary_page, text = "Summary")
+    notebook.add(full_history_page, text = "Full Transaction History")
     notebook.select(1)
 
 
@@ -50,14 +63,14 @@ def showName():
     # enterNameLbl.config(text= "Welcome " + userName)
     # nameEntry.place_forget()
     # submitName.place_forget()
-    print(userName)
+
     nameHome = tk.Label(home_page, font = smallFont )
     if len(userName) != 0: # if the entry for user name is empty
         nameHome.config(text = userName + "'s personal finance tracker",)
     else:
         nameHome.config(text = "Your personal finance tracker")
     
-    nameHome.place(relx = 0.1, rely = 0.05, anchor= tk.CENTER)
+    nameHome.place(relx = 0.0125, rely = 0.025, anchor= "w") # anchored west since some names are longer so it always shows the name
 enterNameLbl = tk.Label(greeting_page, text = "Enter your name ", font = largeFont)
 enterNameLbl.place(relx=0.5, rely = 0.3, anchor= tk.CENTER)
 
@@ -126,12 +139,46 @@ expenseTypes = [
     "Health", 
     "Others"
 ]
+fullDatesList = [] # will contain the dates to be sorted for the range, for slider when filtering charts
+coloumnTitles = ["Transaction Id", "Transaction Type", "Transaction Value", "Category", "Date"]
+rawData = []
+
+def updateTableShown(rows, columns):
+    # remove label since it messes up with placement for some reason
+    historyLbl.grid_remove()
+
+    # makes columns take up entire space, also allows the history label to span them all again
+    for col in range(columns):
+        full_history_page.grid_columnconfigure(col, weight=1)
+
+    # place it again
+    historyLbl.grid(row=0, column=0, columnspan=columns, sticky="n")
+
+    # putting table data
+    for row1 in range(rows + 1):
+        for column1 in range(columns):
+            if row1 == 0: # gives the titles for the columns
+                text = coloumnTitles[column1]
+            else:
+                # adds to it to move the the different entries, idk why this is the exact formula
+                text = str(rawData[(row1 - 1) * columns + column1]) 
+
+            # add the text
+            tablePosition = tk.Entry(full_history_page)
+            tablePosition.config(state="normal")
+            tablePosition.insert(tk.END, text)
+            tablePosition.grid(row=row1 + 1, column=column1, sticky="nsew")  # sticky for covering entire page
+
+            # disabled so user cant edit
+            tablePosition.config(state="disabled", disabledforeground="#000000")
 
 
 
-def updateGraph(): # updates both no matter what so they both always show
+
+def updateGraph(hideGraphs = True): # updates both no matter what so they both always show
     fig = plt.figure() # has to remake from scratch so they dont just draw them over eachother 
     canvas = FigureCanvasTkAgg(fig, summary_page)
+
     canvas.get_tk_widget().place(relx=0.5, rely=0.5, anchor= tk.CENTER)
     plt.subplot(1,2,1)
     labels = list(incomeGained.keys())
@@ -143,12 +190,27 @@ def updateGraph(): # updates both no matter what so they both always show
     sizes = list(expenseSpent.values())
     plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
     plt.title("Expense Pie Chart")
+    if hideGraphs == False:
+        fig.set_visible(False)
+    else:
+        fig.set_visible(True)
 
+# sliderLeftValue = tk.DoubleVar(value= 0)
+# sliderRightValue = tk.DoubleVar(value = 1)
+# dateSlider = RangeSliderH( summary_page , [sliderLeftValue, sliderRightValue], padX= 11)
+# dateSlider.place(relx = 0.7, rely = 0.6, anchor= tk.CENTER)
+
+    slider_ax = fig.add_axes([0.20, 0.1, 0.60, 0.03])
+    slider = RangeSlider(slider_ax, "Date Range", 0, 1234)
     canvas.draw()  # redraw so visuals are right
+
+
 
 
 def showIncomeBox(): # function for button to add income,  calls the entry box and button to submit
     noTransactionTypeBtn.place_forget() # hides the default message saying there is no transaction type
+    transactionTypeReportingLbl.config(text= "Reporting Income")
+    transactionTypeReportingLbl.place(rely = 0.2, relx = 0.5, anchor= tk.CENTER)
     incomeEntry.place(rely = 0.35, relx = 0.50, anchor= "center", width= 100)
     submitIncomeButton.place(rely = 0.425, relx = 0.50, anchor = "center")
     incomeDropdown.place(rely = 0.35, relx = 0.70, anchor = tk.CENTER)
@@ -161,6 +223,8 @@ def errorMessage(): # if an error arises this function is called, ie a string in
 
 def showExpenseBox(): # function for button to add income,  calls the entry box and button to submit
     noTransactionTypeBtn.place_forget()
+    transactionTypeReportingLbl.config(text= "Reporting Expense")
+    transactionTypeReportingLbl.place(rely = 0.2, relx = 0.5, anchor= tk.CENTER)
     expenseEntry.place(rely = 0.35, relx = 0.50, anchor= "center", width= 100)
     submitExpenseButton.place(rely = 0.425, relx = 0.50, anchor = "center")
     expenseDropdown.place(rely = 0.35, relx = 0.70, anchor = tk.CENTER)
@@ -175,77 +239,86 @@ def addIncome(): # once income is added new balance is calculated
     global transactionHistory
     global balanceHistory
     incType = incomeOptionChosen.get() # type for the dictionary ie from salary, pension ...
-    if incType not in incomeTypes: # if they didnt pick a type from options possible like the default value
+    if incType not in incomeTypes or incomeEntry.get().isnumeric() == False: 
+        # if they didnt pick a type from options possible like the default value, or didnt put a number
         errorMessage()
     else:
         if incType not in incomeGained:
             incomeGained.update( {incType : int(incomeEntry.get())} ) # adds category if it does not exist yet
         else:
             incomeGained[incType]+= int(incomeEntry.get())  # updates dictionary for that type 
-        try:
-            balance +=int(incomeEntry.get()) # regular balance update and adding  to history
+
+        balance +=int(incomeEntry.get()) # regular balance update and adding  to history
+    
+        transactionHistory.append(incomeEntry.get())
+        transactionID = random.randint(1000,9999)
+        latestTransaction = transactionHistory[-1]
+        transactionDict.update({latestTransaction: transactionID})
+        balanceHistory.append(balance)
+        # print(transactionDict)
+        # print(incomeGained)
+        incomeSubmittedDate = incomeDate.get()
+        tempIncomeDict = {"transaction_id": transactionID, "transaction_type": "income", "transaction_value": incomeEntry.get(), # adds info to dict
+                          "category": incType, "date": incomeSubmittedDate}
+        dataValues =[transactionID, "income", incomeEntry.get(), incType, incomeSubmittedDate]
+        rawData.extend(dataValues) # append for multiple values
+        fullTransactionData.append(tempIncomeDict)
+        fullDatesList.append(incomeSubmittedDate)
+
+        noTransactionTypeBtn.place(relx = 0.5, rely = 0.3, anchor= tk.CENTER)
+        notebook.select(1)
+        notebook.hide(4)
+        updateTableShown(columns= 5, rows = len(fullTransactionData))
+        updateBalance("income") # updates visual balance on top and history lists since they dont auto change
+        updateGraph() # updates the visual graphs
+
         
-            transactionHistory.append(incomeEntry.get())
-            transactionID = random.randint(1000,9999)
-            latestTransaction = transactionHistory[-1]
-            transactionDict.update({latestTransaction: transactionID})
-            balanceHistory.append(balance)
-            # print(transactionDict)
-            # print(incomeGained)
 
-            incomeSubmittedDate = incomeDate.get()
-            tempIncomeDict = {"transaction_id": transactionID, "transaction_type": "income", "transaction_value": incomeEntry.get(), # adds info to dict
-                              "income_category": incType, "income_date": incomeSubmittedDate}
-            fullTransactionData.append(tempIncomeDict)
-            
-            
 
-        except:
-            errorMessage()
     noTransactionTypeBtn.place(relx = 0.5, rely = 0.3, anchor= tk.CENTER)
-    updateBalance("income") # updates visual balance on top and history lists since they dont auto change
-    updateGraph() # updates the visual graphs
-    notebook.select(1)
+
     # uses income as entry type so text for transaction is green
 
 
 
 def addExpense(): # same as income but expense
-    
     global balance
     global transactionHistory
     global balanceHistory
     expType = expenseOptionChosen.get()
-    if expType not in expenseTypes:
+    if expType not in expenseTypes or expenseEntry.get().isnumeric() == False:
         errorMessage()
     else:
-        try:
-            if expType not in expenseSpent:
-                expenseSpent.update( {expType : int(expenseEntry.get())} ) # adds category if it does not exist yet
-            else:
-                expenseSpent[expType]+= int(expenseEntry.get()) # should it be a negative or positive in expense category dictionary
+        if expType not in expenseSpent:
+            expenseSpent.update( {expType : int(expenseEntry.get())} ) # adds category if it does not exist yet
+        else:
+            expenseSpent[expType]+= int(expenseEntry.get()) # should it be a negative or positive in expense category dictionary
 
 
-            balance += -int(expenseEntry.get())
-            transactionHistory.append(expenseEntry.get())
-            balanceHistory.append(balance)
-            transactionID = random.randint(1000,9999)
-            latestTransaction = transactionHistory[-1]
-            transactionDict.update({latestTransaction: transactionID})
-            print(transactionDict)
-            print(expenseSpent)
+        balance += -int(expenseEntry.get())
+        transactionHistory.append(expenseEntry.get())
+        balanceHistory.append(balance)
+        transactionID = random.randint(1000,9999)
+        latestTransaction = transactionHistory[-1]
+        transactionDict.update({latestTransaction: transactionID})
+        print(transactionDict)
+        print(expenseSpent)
 
-            expenseSubmittedDate = expenseDate.get()
-            tempExpenseDict = {"transaction_id": transactionID, "transaction_type": "expense", "transaction_value": expenseEntry.get(),
-                              "income_category": expType, "income_date": expenseSubmittedDate}
-            fullTransactionData.append(tempExpenseDict)
+        expenseSubmittedDate = expenseDate.get()
+        tempExpenseDict = {"transaction_id": transactionID, "transaction_type": "expense", "transaction_value": expenseEntry.get(),
+                            "category": expType, "date": expenseSubmittedDate}
+        fullTransactionData.append(tempExpenseDict)
+        fullDatesList.append(expenseSubmittedDate)
+        expenseValues = [transactionID, "expense", expenseEntry.get(), expType, expenseSubmittedDate]
 
-        except:
-            errorMessage()
-    noTransactionTypeBtn.place(relx = 0.5, rely = 0.3, anchor= tk.CENTER)
-    notebook.select(1)
-    updateBalance("expense")
-    updateGraph()
+        rawData.extend(expenseValues)
+            
+        noTransactionTypeBtn.place(relx = 0.5, rely = 0.3, anchor= tk.CENTER)
+        notebook.select(1)
+        notebook.hide(4)
+        updateTableShown(columns= 5, rows = len(fullTransactionData))
+        updateBalance("expense")
+        updateGraph()
 
 def updateBalance(transactionType): 
     print(fullTransactionData)
@@ -300,12 +373,10 @@ def submissionRemove(type): # clear entry box and remove buttons after use
         #expenseTypeLabel.place_forget()      
 
 # buttons to report income starting actions, and submit button, each with functions
-    
-# reportTransactionBtn = tk.Button(home_page, text = "Report Transaction", bg = "#e0dede", font = mediumFont, command= lambda:notebook.select(3))
-# reportTransactionBtn.place(relx= 0.5, rely= 0.25, anchor= "center")
 
 def showTransactionPageType(event):
-    notebook.select(3)
+    notebook.add(transaction_page, text="Report Transactions")
+    notebook.select(4)
     if transactionChosen.get() == "Income":
         showIncomeBox()
     elif transactionChosen.get() == "Expense":
@@ -318,13 +389,17 @@ reportTransactionLbl.place(relx = 0.5, rely = 0.3, anchor= tk.CENTER)
         
 transactionChosen = tk.StringVar(value = "Select Transaction Type")
 transactionTypes = ["Income", "Expense"]
-transactionDropdown = tk.OptionMenu(home_page, transactionChosen, *transactionTypes, command= showTransactionPageType)
+transactionDropdown = tk.OptionMenu(home_page, transactionChosen, *transactionTypes, command=showTransactionPageType)
 transactionDropdown.config(font = mediumFont)
 transactionDropdown.place(relx = 0.5, rely = 0.375, anchor= tk.CENTER)
 
 
-transactionPageTitle = tk.Label(transaction_page, text = "Transaction Page", font = largeFont)
+transactionPageTitle = tk.Label(transaction_page, text = "Transaction Page", font = largestFont)
 transactionPageTitle.place(relx= 0.5, rely = 0.05, anchor= tk.CENTER)
+
+# if on report income it just titles the page such and same for expense
+transactionTypeReportingLbl = tk.Label(transaction_page, font = largeFont)
+
 
 noTransactionTypeBtn = tk.Button(transaction_page, text = "It seems like you don't have a transaction type chosen\n Click here to go to home page",
                                  font = largeFont, borderwidth=0, command= lambda: notebook.select(1))
@@ -357,18 +432,30 @@ expenseDateLbl = tk.Label(transaction_page, text = "Enter Transaction Date", fon
 
 
 
+
+
+
 #2ND PAGE PLT
 dashLbl = tk.Label(summary_page, text = "Dashboard", font = largeFont)
 dashLbl.place(relx= 0.5, rely = 0.05, anchor= tk.CENTER)
+# dashLbl.grid(row = 1, column= 1, columnspan= 10, rowspan= 3, sticky = "ew")
+# dashLbl.grid_rowconfigure(1, weight=1)
+# dashLbl.grid_columnconfigure(1, weight=1)
+
+historyLbl = tk.Label(full_history_page, text = "Full Transaction History", font = largeFont)
+# historyLbl.place(relx = 0.5, rely = 0.05, anchor= tk.CENTER)
+historyLbl.grid(row=0, column=0, columnspan=3, sticky="n")
+
+# Configure the columns in the grid to expand
+full_history_page.grid_columnconfigure(0, weight=1)  # Allow the first column to expand
+full_history_page.grid_columnconfigure(1, weight=1)  # Allow the second column to expand
+full_history_page.grid_columnconfigure(2, weight=1)  # Allow the third column to expand
 def quitApplication(): # doesnt end runtime by default when closing
     root.quit()
     root.destroy()
 root.protocol("WM_DELETE_WINDOW", quitApplication)
 
 # transaction page, changing it from all on the home
-
-
-
 
 
 root.bind("<Configure>", onResize)  # lets the frames (tabs for diff pages) resize with the window
