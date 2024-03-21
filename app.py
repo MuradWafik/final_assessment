@@ -93,8 +93,8 @@ balanceLbl = tk.Label(home_page, text="Balance:\n "+ str(balance) + "$" , font=l
 balanceLbl.place(relx=0.5, rely=0.15, anchor=tk.CENTER)
 transactionLbl = tk.Label(home_page, text= "Transaction History", font = mediumFont)
 transactionLbl.place(relx=0.75, rely= 0.45, anchor= "center")
-balanceHistoryLbl = tk.Label(home_page, text= "Balance History", font = mediumFont)
-balanceHistoryLbl.place(relx=0.2, rely=0.45, anchor="center")
+payeeAndSourceLbl = tk.Label(home_page, text= "Payee / Source", font = mediumFont)
+payeeAndSourceLbl.place(relx=0.2, rely=0.45, anchor="center")
 transactionIdLbl = tk.Label(home_page, text= "Transaction ID", font = ["Roboto", 14] )
 transactionIdLbl.place(relx=0.9, rely= 0.45, anchor= "center")
 
@@ -108,9 +108,9 @@ transactionTextBox.tag_configure("income", foreground="green", justify = tk.CENT
 transactionTextBox.tag_configure("expense", foreground="red", justify = tk.CENTER)
 
 transactionTextBox.place(relx=0.75, rely=0.6, anchor=tk.CENTER)
-balanceList = tk.Text(home_page, font=smallFont, state= "disabled", height= 5, width= 40, border= 0, background= "#F0F0F0")
-balanceList.place(relx=0.2, rely=0.6, anchor=tk.CENTER)
-balanceList.tag_configure("basic", justify=tk.CENTER)
+payeeAndSourceList = tk.Text(home_page, font=smallFont, state= "disabled", height= 5, width= 40, border= 0, background= "#F0F0F0")
+payeeAndSourceList.place(relx=0.2, rely=0.6, anchor=tk.CENTER)
+payeeAndSourceList.tag_configure("basic", justify=tk.CENTER)
 
 transHistoryList = tk.Text(home_page, font = smallFont, state= "disabled",height= 5, width = 10, border= 0 ,background= "#F0F0F0" )
 transHistoryList.place(relx=0.9, rely=0.6, anchor=tk.CENTER)
@@ -225,10 +225,12 @@ def showIncomeBox(): # function for button to add income,  calls the entry box a
     transactionTypeReportingLbl.config(text= "Reporting Income")
     transactionTypeReportingLbl.place(rely = 0.2, relx = 0.5, anchor= tk.CENTER)
     incomeEntry.place(rely = 0.35, relx = 0.50, anchor= "center", width= 100)
-    submitIncomeButton.place(rely = 0.425, relx = 0.50, anchor = "center")
+    submitIncomeButton.place(rely = 0.625, relx = 0.50, anchor = "center")
     incomeDropdown.place(rely = 0.35, relx = 0.70, anchor = tk.CENTER)
     incomeDate.place(relx = 0.35, rely = 0.35, anchor = tk.CENTER)
     incomeDateLbl.place(relx = 0.35, rely = 0.315, anchor= tk.CENTER)
+    incomeSourceEntry.place(relx = 0.5, rely = 0.55, anchor = tk.CENTER)
+    incomeSourceLbl.place(relx = 0.5, rely = 0.5, anchor= tk.CENTER)
 
 def errorMessage(): # if an error arises this function is called, ie a string inputted instead of int
     messagebox.showerror('Invalid Input', "Please enter a valid input")
@@ -239,10 +241,12 @@ def showExpenseBox(): # function for button to add income,  calls the entry box 
     transactionTypeReportingLbl.config(text= "Reporting Expense")
     transactionTypeReportingLbl.place(rely = 0.2, relx = 0.5, anchor= tk.CENTER)
     expenseEntry.place(rely = 0.35, relx = 0.50, anchor= "center", width= 100)
-    submitExpenseButton.place(rely = 0.425, relx = 0.50, anchor = "center")
+    submitExpenseButton.place(rely = 0.625, relx = 0.50, anchor = "center")
     expenseDropdown.place(rely = 0.35, relx = 0.70, anchor = tk.CENTER)
     expenseDate.place(relx = 0.35, rely = 0.35, anchor = tk.CENTER )
     expenseDateLbl.place(relx = 0.35, rely = 0.315, anchor= tk.CENTER)
+    expensePayeeEntry.place(relx = 0.5, rely = 0.55, anchor= tk.CENTER)
+    expensePayeeLbl.place(relx= 0.5, rely = 0.5, anchor = tk.CENTER)
 
 usedIDS = set() # how to ensure ids are unique
 def generateRandomID():
@@ -250,7 +254,7 @@ def generateRandomID():
     idToAdd = random.randint(1000,9999)
     if idToAdd not in usedIDS:
         usedIDS.add(idToAdd)
-        return generateRandomID()
+        return idToAdd
     return generateRandomID()
 
 def addIncome(): # once income is added new balance is calculated
@@ -258,6 +262,7 @@ def addIncome(): # once income is added new balance is calculated
     global transactionHistory
     global balanceHistory
     incType = incomeOptionChosen.get() # type for the dictionary ie from salary, pension ...
+    source = incomeSourceEntry.get()
     if incType not in incomeTypes or incomeEntry.get().isnumeric() == False: 
         # if they didnt pick a type from options possible like the default value, or didnt put a number
         errorMessage()
@@ -278,7 +283,7 @@ def addIncome(): # once income is added new balance is calculated
         # print(incomeGained)
         incomeSubmittedDate = incomeDate.get()
         tempIncomeDict = {"transaction_id": transactionID, "transaction_type": "income", "transaction_value": incomeEntry.get(), # adds info to dict
-                          "category": incType, "date": incomeSubmittedDate}
+                          "category": incType, "date": incomeSubmittedDate, "payee/source": source}
         dataValues =[transactionID, "income", incomeEntry.get(), incType, incomeSubmittedDate]
         rawData.extend(dataValues) # append for multiple  
         fullTransactionData.append(tempIncomeDict)
@@ -304,6 +309,7 @@ def addExpense(): # same as income but expense
     global transactionHistory
     global balanceHistory
     expType = expenseOptionChosen.get()
+    payee = expensePayeeEntry.get()
     if expType not in expenseTypes or expenseEntry.get().isnumeric() == False:
         errorMessage()
     else:
@@ -324,7 +330,7 @@ def addExpense(): # same as income but expense
 
         expenseSubmittedDate = expenseDate.get()
         tempExpenseDict = {"transaction_id": transactionID, "transaction_type": "expense", "transaction_value": expenseEntry.get(),
-                            "category": expType, "date": expenseSubmittedDate}
+                            "category": expType, "date": expenseSubmittedDate, "payee/source": payee}
         fullTransactionData.append(tempExpenseDict)
         fullDatesList.append(expenseSubmittedDate)
         expenseValues = [transactionID, "expense", expenseEntry.get(), expType, expenseSubmittedDate]
@@ -342,13 +348,13 @@ def updateBalance(transactionType):
     print(fullTransactionData)
     global balance
     global transactionHistory
-    global balanceHistory
 
-    balanceLbl.config(text="Balance:\n "+ str(balanceHistory[-1])+"$", justify = tk.CENTER) # the balance at the top is updated with new value
+
+    balanceLbl.config(text="Balance:\n "+ str(balance)+"$", justify = tk.CENTER) # the balance at the top is updated with new value
     textAmmount = str(transactionHistory[-1]) # the last transaction but converted to string
     transactionTextBox.config(state= 'normal')
-    balanceList.config(state="normal") # allow the lists to be modified so the latest transactions and balance are added in program
-    balanceList.insert(tk.END, balance, "basic")
+    payeeAndSourceList.config(state="normal") # allow the lists to be modified so the latest transactions and balance are added in program
+    payeeAndSourceList.insert(tk.END, fullTransactionData[-1]["payee/source"], "basic")
 
     transHistoryList.config(state="normal")
 
@@ -363,9 +369,9 @@ def updateBalance(transactionType):
     elif transactionType == "expense":
         transactionTextBox.insert(tk.END, "-" + textAmmount, "expense") # expense tag so its red
     # need an else to update balance after deleting
-    balanceList.insert(tk.END, "\n")
-    balanceList.see(tk.END)  
-    balanceList.config(state="disabled") # disable after so user cant alter text box
+    payeeAndSourceList.insert(tk.END, "\n")
+    payeeAndSourceList.see(tk.END)  
+    payeeAndSourceList.config(state="disabled") # disable after so user cant alter text box
 
     transactionTextBox.insert(tk.END, "\n")  #  newline for next transaction
     transactionTextBox.see(tk.END)  
@@ -384,6 +390,8 @@ def submissionRemove(type): # clear entry box and remove buttons after use
         incomeDropdown.place_forget()
         incomeDate.place_forget()
         incomeDateLbl.place_forget()
+        incomeSourceEntry.place_forget()
+        incomeSourceLbl.place_forget()
 
         #incomeTypeLabel.place_forget()
     else: # clears the expense widgets 
@@ -394,6 +402,8 @@ def submissionRemove(type): # clear entry box and remove buttons after use
         expenseDropdown.place_forget()
         expenseDate.place_forget()
         expenseDateLbl.place_forget()
+        expensePayeeEntry.place_forget()
+        expensePayeeLbl.place_forget
         #expenseTypeLabel.place_forget()      
 
 # buttons to report income starting actions, and submit button, each with functions
@@ -416,26 +426,28 @@ def showDeleteTransactionPage():
     submitDeletionBtn.place(relx = 0.5, rely = 0.5 , anchor = tk.CENTER)
 
 def deletedUpdateBalance(): # update balance after a deletion
-    global balanceHistory
     global transactionHistory
-    balanceLbl.config(text="Balance:\n "+ str(balanceHistory[-1])+"$", justify = tk.CENTER) # the balance at the top is updated with new value
+    balanceLbl.config(text="Balance:\n "+ str(balance)+"$", justify = tk.CENTER) # the balance at the top is updated with new value
     textAmmount = str(transactionHistory[-1]) # the last transaction but converted to string
     transactionTextBox.config(state= 'normal')
-    balanceList.config(state="normal") # allow the lists to be modified so the latest transactions and balance are added in program
-    balanceList.insert(tk.END, balance, "basic")
+    payeeAndSourceList.config(state="normal") # allow the lists to be modified so the latest transactions and balance are added in program
+    payeeAndSourceList.insert(tk.END, balance, "basic")
 
     # transHistoryList.config(state="normal")
-    balanceList.delete(1.0, tk.END)
+    payeeAndSourceList.delete(1.0, tk.END)
     i = 1 # displays either last 5 or all transactions if fewer than 5
     while i <= 5 and i <= len(fullTransactionData):
+        
         currentIndex = -(i) # to go from the back to show 5 most recent or most recent in general
-        textBalance = str(balanceHistory[currentIndex])
+        latestDictIndex = fullTransactionData[currentIndex]
+        # textBalance = str(balanceHistory[currentIndex])
         # print(textBalance, "textbalance \n")
         # print(balanceHistory[currentIndex], "currindex bal \n")
-        balanceList.insert(tk.END,textBalance, "basic")
+        payeeAndSourceList.insert(tk.END,latestDictIndex["payee/source"], "basic")
         i+=1
 def deleteTransaction():
     global fullTransactionData
+    global balance
     transactionIDToDelete = deleteTransactionIDEntry.get()
     if len(transactionIDToDelete) !=4: # can only check length on string
         errorMessage()
@@ -445,9 +457,9 @@ def deleteTransaction():
     for dictionary in fullTransactionData:
         if dictionary["transaction_id"] == transactionIDToDelete:
             if dictionary["transaction_type"] == "income":
-                    balanceHistory[-1]-= int(dictionary["transaction_value"]) # if they are deleting an income, subtract balance by that ammount
+                    balance-= int(dictionary["transaction_value"]) # if they are deleting an income, subtract balance by that ammount
             elif dictionary["transaction_type"] == "expense":
-                    balanceHistory[-1]+= int(dictionary["transaction_value"]) # if they are deleting an expense, add balance by that ammount
+                    balance+= int(dictionary["transaction_value"]) # if they are deleting an expense, add balance by that ammount
             
             print(fullTransactionData, "THIS IS BEFORE")
             fullTransactionData.remove(dictionary)
@@ -510,8 +522,14 @@ expenseDropdown.config(font = mediumFont)
 incomeDate = DateEntry(transaction_page)
 incomeDateLbl = tk.Label(transaction_page,text = "Enter Transaction Date", font = smallFont)
 
+incomeSourceEntry = tk.Entry(transaction_page, font = mediumFont)
+incomeSourceLbl = tk.Label(transaction_page, text = "Income Source", font= mediumFont)
+
 expenseDate = DateEntry(transaction_page)
 expenseDateLbl = tk.Label(transaction_page, text = "Enter Transaction Date", font = smallFont)
+
+expensePayeeLbl = tk.Label(transaction_page, text = "Expense Payee", font= mediumFont)
+expensePayeeEntry = tk.Entry(transaction_page, font = mediumFont)
 
 
 deleteTransactionLbl = tk.Label(home_page, text= "Put in a wrong Transaction?", font = mediumFont)
