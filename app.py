@@ -104,28 +104,23 @@ transactionIdLbl.place(relx=0.9, rely= 0.45, anchor= "center")
 # since its tk.text i disable so user cant change but allows program to add to it and change color
 # such as red color if withdrawl or green if deposit
 transactionTextBox = tk.Text(home_page, font=smallFont, state= "disabled", height= 5, width = 40,  border= 0, background= "#F0F0F0")
-transactionTextBox.tag_configure("income", foreground="green", justify = tk.CENTER)
-transactionTextBox.tag_configure("expense", foreground="red", justify = tk.CENTER)
+
 
 transactionTextBox.place(relx=0.75, rely=0.6, anchor=tk.CENTER)
 payeeAndSourceList = tk.Text(home_page, font=smallFont, state= "disabled", height= 5, width= 40, border= 0, background= "#F0F0F0")
 payeeAndSourceList.place(relx=0.2, rely=0.6, anchor=tk.CENTER)
-payeeAndSourceList.tag_configure("basic", justify=tk.CENTER)
+
 
 transHistoryList = tk.Text(home_page, font = smallFont, state= "disabled",height= 5, width = 10, border= 0 ,background= "#F0F0F0" )
 transHistoryList.place(relx=0.9, rely=0.6, anchor=tk.CENTER)
-transHistoryList.tag_configure("basic", justify=tk.CENTER)
+
 
 incomeEntry = tk.Entry(transaction_page, font= mediumFont, justify= "center")
 expenseEntry = tk.Entry(transaction_page, width=10, font= mediumFont)
 
 
-transactionHistory = [] # last index will be used when adding new transactions
-
-balanceHistory = [] # last index will be used in balance history displayed 1 by 1
-
 incomeGained = {}
-# blank dicts for income and expenses to only show categories once the user uses them 
+# blank dicts for income and expenses to only show categories once the user uses them in chart
 expenseSpent = {}
 
 fullTransactionData = [] # list of dictionaries, key is id, shows  all data about a specific transction
@@ -144,38 +139,51 @@ expenseTypes = [
     "Others"
 ]
 fullDatesList = [] # will contain the dates to be sorted for the range, for slider when filtering charts
-coloumnTitles = ["Transaction Id", "Transaction Type", "Transaction Value", "Category", "Date"]
-rawData = []
 
-def updateTableShown(rows, columns):
-    # remove label since it messes up with placement for some reason
-    historyLbl.grid_remove()
+tablePageLbl = tk.Label(full_history_page, font = ("Roboto", 16), height= 2, width= 84, borderwidth= 0, background= "#F0F0F0")
+tablePageLbl.place(relx= 0.5, rely = 0.1, anchor= tk.CENTER)
+# just putting the specific spaces so it shows right, no reason for their own text boxes since it wont change
+tablePageLbl.config(text=  "Transaction Id   Transaction Type   Transaction Value        Category            Date               Source/Payee")
+tranIDText = tk.Text(full_history_page, font = mediumFont, height = 20, width= 14)
+tranTypeText = tk.Text(full_history_page, font = mediumFont, height = 20, width= 14)
+tranValueText = tk.Text(full_history_page, font = mediumFont, height = 20, width= 14)
+categoryText = tk.Text(full_history_page, font = mediumFont, height = 20, width= 14)
+dateText = tk.Text(full_history_page, font = mediumFont, height = 20, width= 14)
+sourcePayeeText = tk.Text(full_history_page, font = mediumFont, height = 20, width= 14)
 
-    # makes columns take up entire space, also allows the history label to span them all again
-    for col in range(columns):
-        full_history_page.grid_columnconfigure(col, weight=1)
+tranIDText.place(relx= 0.175, rely = 0.55, anchor= tk.CENTER)
+tranTypeText.place(relx = 0.3, rely = 0.55, anchor= tk.CENTER)
+tranValueText.place(relx = 0.425, rely = 0.55, anchor= tk.CENTER)
+categoryText.place(relx = 0.575, rely = 0.55, anchor = tk.CENTER)
+dateText.place(relx= 0.7, rely = 0.55, anchor = tk.CENTER)
+sourcePayeeText.place(relx= 0.825, rely = 0.55, anchor= tk.CENTER)
 
-    # place it again
-    historyLbl.grid(row=0, column=0, columnspan=columns, sticky="n")
+def giveTags(): # just place them all together since there are a lot
+    transactionTextBox.tag_configure("income", foreground="green", justify = tk.CENTER)
+    transactionTextBox.tag_configure("expense", foreground="red", justify = tk.CENTER)
+    payeeAndSourceList.tag_configure("basic", justify=tk.CENTER) # basic is just a default tag i made to center the text
+    transHistoryList.tag_configure("basic", justify=tk.CENTER)
+    tranIDText.tag_configure("basic", justify=tk.CENTER)
+    tranTypeText.tag_configure("basic", justify=tk.CENTER)
+    tranValueText.tag_configure("basic", justify=tk.CENTER)
+    categoryText.tag_configure("basic", justify=tk.CENTER)
+    dateText.tag_configure("basic", justify=tk.CENTER)
+    sourcePayeeText.tag_configure("basic", justify=tk.CENTER)
+    
 
-    # putting table data
-    for row1 in range(rows + 1):
-        for column1 in range(columns):
-            if row1 == 0: # gives the titles for the columns
-                text = coloumnTitles[column1]
-            else:
-                # adds to it to move the the different entries, idk why this is the exact formula
-                text = str(rawData[(row1 - 1) * columns + column1]) 
+# storing all tk.Texts in list since same actions always apply on them so i can just loop
+tableTextBoxes = [tranIDText, tranTypeText, tranValueText, categoryText, dateText, sourcePayeeText,payeeAndSourceList, transHistoryList, transactionTextBox]
+def disableTables(): # makes the textboxes for full tables not editable by user
+    for widget in tableTextBoxes:
+        widget.config(state= tk.DISABLED)
+disableTables()
 
-            # add the text
-            tablePosition = tk.Entry(full_history_page)
-            tablePosition.config(state="normal")
-            tablePosition.insert(tk.END, text)
-            tablePosition.grid(row=row1 + 1, column=column1, sticky="nsew")  # sticky for covering entire page
 
-            # disabled so user cant edit
-            tablePosition.config(state="disabled", disabledforeground="#000000")
-
+def clearTables(): # if u just insert the text will always duplicate, must clear then add
+    # also just make them available to edit
+    for widget in tableTextBoxes:
+        widget.config(state= tk.NORMAL)
+        widget.delete(1.0, tk.END)
 
 
 
@@ -194,9 +202,6 @@ def updateGraph(): # updates both no matter what so they both always show
     sizes = list(expenseSpent.values())
     plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
     plt.title("Expense Pie Chart")
-    # 
-
-
 
     # date list should type should be converted then can be sorted by python built in
     convertedDateList = [] 
@@ -204,15 +209,15 @@ def updateGraph(): # updates both no matter what so they both always show
         convertedDateList.append(datetime.datetime.strptime(transactionDate,"%m/%d/%y"))
     sorted_dates = sorted(convertedDateList)
 
-# minimum and max dates from first and last index of sorted list
+    # minimum and max dates from first and last index of sorted list
     min_date = sorted_dates[0]
     max_date = sorted_dates[-1]
 
-# place and add the slider
+    # place and add the slider
     slider_ax = fig.add_axes([0.20, 0.1, 0.60, 0.03])
     slider = RangeSlider(slider_ax, "Date Range", 0, len(sorted_dates) - 1, valinit=(0, len(sorted_dates) - 1))
 
-# not sure exactly but adds labels
+    # not sure exactly but adds labels
     slider_labels = [str(date) for date in sorted_dates]
     slider.set_val((0, len(sorted_dates) - 1))
     slider.valtext.set_text(f'{min_date} - {max_date}')
@@ -234,7 +239,6 @@ def showIncomeBox(): # function for button to add income,  calls the entry box a
 
 def errorMessage(): # if an error arises this function is called, ie a string inputted instead of int
     messagebox.showerror('Invalid Input', "Please enter a valid input")
-
 
 def showExpenseBox(): # function for button to add income,  calls the entry box and button to submit
     noTransactionTypeBtn.place_forget()
@@ -259,8 +263,7 @@ def generateRandomID():
 
 def addIncome(): # once income is added new balance is calculated
     global balance
-    global transactionHistory
-    global balanceHistory
+
     incType = incomeOptionChosen.get() # type for the dictionary ie from salary, pension ...
     source = incomeSourceEntry.get()
     if incType not in incomeTypes or incomeEntry.get().isnumeric() == False: 
@@ -273,41 +276,22 @@ def addIncome(): # once income is added new balance is calculated
             incomeGained[incType]+= int(incomeEntry.get())  # updates dictionary for that type 
 
         balance +=int(incomeEntry.get()) # regular balance update and adding  to history
-    
-        transactionHistory.append(incomeEntry.get())
-        transactionID = generateRandomID()
-        latestTransaction = transactionHistory[-1]
+        transactionID = generateRandomID() # gets a random id for the transaction id
 
-        balanceHistory.append(balance)
-        # print(transactionDict)
-        # print(incomeGained)
         incomeSubmittedDate = incomeDate.get()
         tempIncomeDict = {"transaction_id": transactionID, "transaction_type": "income", "transaction_value": incomeEntry.get(), # adds info to dict
                           "category": incType, "date": incomeSubmittedDate, "payee/source": source}
-        dataValues =[transactionID, "income", incomeEntry.get(), incType, incomeSubmittedDate]
-        rawData.extend(dataValues) # append for multiple  
+
         fullTransactionData.append(tempIncomeDict)
         fullDatesList.append(incomeSubmittedDate)
 
         noTransactionTypeBtn.place(relx = 0.5, rely = 0.3, anchor= tk.CENTER)
         notebook.select(1)
         notebook.hide(4)
-        updateTableShown(columns= 5, rows = len(fullTransactionData))
-        updateBalance("income") # updates visual balance on top and history lists since they dont auto change
-        updateGraph() # updates the visual graphs
-
-
-
-    noTransactionTypeBtn.place(relx = 0.5, rely = 0.3, anchor= tk.CENTER)
-
-    # uses income as entry type so text for transaction is green
-
-
+        updateBalance() # updates visual balance on top and history lists since they dont auto change
 
 def addExpense(): # same as income but expense
     global balance
-    global transactionHistory
-    global balanceHistory
     expType = expenseOptionChosen.get()
     payee = expensePayeeEntry.get()
     if expType not in expenseTypes or expenseEntry.get().isnumeric() == False:
@@ -318,71 +302,48 @@ def addExpense(): # same as income but expense
         else:
             expenseSpent[expType]+= int(expenseEntry.get()) # should it be a negative or positive in expense category dictionary
 
-
         balance += -int(expenseEntry.get())
-        transactionHistory.append(expenseEntry.get())
-        balanceHistory.append(balance)
         transactionID = random.randint(1000,9999)
-        latestTransaction = transactionHistory[-1]
-
-
-        print(expenseSpent)
 
         expenseSubmittedDate = expenseDate.get()
         tempExpenseDict = {"transaction_id": transactionID, "transaction_type": "expense", "transaction_value": expenseEntry.get(),
                             "category": expType, "date": expenseSubmittedDate, "payee/source": payee}
         fullTransactionData.append(tempExpenseDict)
         fullDatesList.append(expenseSubmittedDate)
-        expenseValues = [transactionID, "expense", expenseEntry.get(), expType, expenseSubmittedDate]
 
-        rawData.extend(expenseValues)
-            
         noTransactionTypeBtn.place(relx = 0.5, rely = 0.3, anchor= tk.CENTER)
         notebook.select(1)
         notebook.hide(4)
-        updateTableShown(columns= 5, rows = len(fullTransactionData))
-        updateBalance("expense")
-        updateGraph()
+        updateBalance()
+ 
+def updateBalance(): 
+    updateGraph() # updates graph with it
 
-def updateBalance(transactionType): 
     print(fullTransactionData)
     global balance
-    global transactionHistory
-
-
     balanceLbl.config(text="Balance:\n "+ str(balance)+"$", justify = tk.CENTER) # the balance at the top is updated with new value
-    textAmmount = str(transactionHistory[-1]) # the last transaction but converted to string
-    transactionTextBox.config(state= 'normal')
-    payeeAndSourceList.config(state="normal") # allow the lists to be modified so the latest transactions and balance are added in program
-    payeeAndSourceList.insert(tk.END, fullTransactionData[-1]["payee/source"], "basic")
+ 
+    clearTables() # makes all text boxes blank so they can be added to again
+    for dictionary in fullTransactionData: 
+        # adds the values for each index at the full history table
+        tranIDText.insert(tk.END, str(dictionary["transaction_id"])+ "\n", "basic")
+        tranTypeText.insert(tk.END, dictionary["transaction_type"]+ "\n","basic")
+        tranValueText.insert(tk.END, str(dictionary["transaction_value"])+ "\n","basic")
+        categoryText.insert(tk.END, dictionary["category"] + "\n", "basic")
+        dateText.insert(tk.END, str(dictionary["date"])+ "\n", "basic")
+        sourcePayeeText.insert(tk.END, dictionary["payee/source"] + "\n", "basic")
+        # above is table page, below is home page
 
-    transHistoryList.config(state="normal")
+        payeeAndSourceList.insert(tk.END, dictionary["payee/source"] + "\n", "basic")
+        transHistoryList.insert(tk.END, str(dictionary["transaction_id"]) + "\n", "basic")
+        if dictionary["transaction_type"] == "income":
+            transactionTextBox.insert(tk.END, "+" + dictionary["transaction_value"] + "\n", dictionary["transaction_type"])  # income tag so its green
+        else:  
+            transactionTextBox.insert(tk.END, "-" + dictionary["transaction_value"] + "\n", dictionary["transaction_type"])  # income tag so its green
+    disableTables() # disables the status of tables so user cant edit them
 
-    latestDict = fullTransactionData[-1]
-    latestDictTransactionID = latestDict["transaction_id"]
-    #DIFF WAY TO CYCLE LIST OF DICTIONARIES, GETS TRANSATION ID OF LATEST DICT
-
-    transHistoryList.insert(tk.END, latestDictTransactionID, "basic")
-
-    if transactionType == "income":
-        transactionTextBox.insert(tk.END, "+" + textAmmount, "income")  # income tag so its green
-    elif transactionType == "expense":
-        transactionTextBox.insert(tk.END, "-" + textAmmount, "expense") # expense tag so its red
-    # need an else to update balance after deleting
-    payeeAndSourceList.insert(tk.END, "\n")
-    payeeAndSourceList.see(tk.END)  
-    payeeAndSourceList.config(state="disabled") # disable after so user cant alter text box
-
-    transactionTextBox.insert(tk.END, "\n")  #  newline for next transaction
-    transactionTextBox.see(tk.END)  
-    transactionTextBox.config(state="disabled") # disable so user cant edit like above since its text box
-
-    transHistoryList.insert(tk.END, "\n")  #  newline for next transaction
-    transHistoryList.see(tk.END)  
-    transHistoryList.config(state="disabled")
-
-def submissionRemove(type): # clear entry box and remove buttons after use
-    if type == "increase": # clears the income widgets
+def submissionRemove(tType):
+    if tType == "increase": # clears the income widgets
         submitIncomeButton.place_forget()
         incomeEntry.delete(0,tk.END)
         incomeEntry.place_forget()
@@ -390,10 +351,10 @@ def submissionRemove(type): # clear entry box and remove buttons after use
         incomeDropdown.place_forget()
         incomeDate.place_forget()
         incomeDateLbl.place_forget()
+        incomeSourceEntry.delete(0, tk.END)
         incomeSourceEntry.place_forget()
         incomeSourceLbl.place_forget()
 
-        #incomeTypeLabel.place_forget()
     else: # clears the expense widgets 
         submitExpenseButton.place_forget()
         expenseEntry.delete(0,tk.END)
@@ -402,9 +363,10 @@ def submissionRemove(type): # clear entry box and remove buttons after use
         expenseDropdown.place_forget()
         expenseDate.place_forget()
         expenseDateLbl.place_forget()
+        expensePayeeEntry.delete(0, tk.END)
         expensePayeeEntry.place_forget()
-        expensePayeeLbl.place_forget
-        #expenseTypeLabel.place_forget()      
+        expensePayeeLbl.place_forget()
+
 
 # buttons to report income starting actions, and submit button, each with functions
 def showTransactionPageType(event):
@@ -425,26 +387,12 @@ def showDeleteTransactionPage():
     deleteTransactionIDEntry.place(relx = 0.5, rely = 0.4, anchor= tk.CENTER)
     submitDeletionBtn.place(relx = 0.5, rely = 0.5 , anchor = tk.CENTER)
 
-def deletedUpdateBalance(): # update balance after a deletion
-    global transactionHistory
-    balanceLbl.config(text="Balance:\n "+ str(balance)+"$", justify = tk.CENTER) # the balance at the top is updated with new value
-    textAmmount = str(transactionHistory[-1]) # the last transaction but converted to string
-    transactionTextBox.config(state= 'normal')
-    payeeAndSourceList.config(state="normal") # allow the lists to be modified so the latest transactions and balance are added in program
-    payeeAndSourceList.insert(tk.END, balance, "basic")
 
-    # transHistoryList.config(state="normal")
-    payeeAndSourceList.delete(1.0, tk.END)
-    i = 1 # displays either last 5 or all transactions if fewer than 5
-    while i <= 5 and i <= len(fullTransactionData):
-        
-        currentIndex = -(i) # to go from the back to show 5 most recent or most recent in general
-        latestDictIndex = fullTransactionData[currentIndex]
-        # textBalance = str(balanceHistory[currentIndex])
-        # print(textBalance, "textbalance \n")
-        # print(balanceHistory[currentIndex], "currindex bal \n")
-        payeeAndSourceList.insert(tk.END,latestDictIndex["payee/source"], "basic")
-        i+=1
+def showDeleteStatus(status):
+    if status == "success":
+        messagebox.showinfo("Sucess", "Sucessfully Deleted Transaction")
+    elif status == "failure":
+        messagebox.showinfo("Unsucsessful", "Unable to Find Transaction")
 def deleteTransaction():
     global fullTransactionData
     global balance
@@ -453,7 +401,7 @@ def deleteTransaction():
         errorMessage()
 
     transactionIDToDelete = int(transactionIDToDelete) # convert entry to int for filtering dictionary
-    
+    hasFoundSolution = False
     for dictionary in fullTransactionData:
         if dictionary["transaction_id"] == transactionIDToDelete:
             if dictionary["transaction_type"] == "income":
@@ -464,24 +412,17 @@ def deleteTransaction():
             print(fullTransactionData, "THIS IS BEFORE")
             fullTransactionData.remove(dictionary)
             print(fullTransactionData, "THIS IS AFTER")
-            deletedUpdateBalance()
+            updateBalance()
+            hasFoundSolution = True
             break
-        #fsdfdsfdsfds#
-        #
-        #
-        #
-        #
-        #
-        #
-        #
-        #
-        #
-
-    updateTableShown(columns= 5, rows = len(fullTransactionData))
-    # doesnt update
-    updateGraph()
+    if(hasFoundSolution):
+        showDeleteStatus("success")
+    else:
+        showDeleteStatus("failure")
 
 
+    deleteTransactionIDEntry.delete(0,tk.END)
+    notebook.select(1) # clears the entry box and goes back to home page
 
 reportTransactionLbl = tk.Label(home_page, text= "Report Transaction:", font = largeFont)
 reportTransactionLbl.place(relx = 0.5, rely = 0.3, anchor= tk.CENTER)
@@ -550,12 +491,8 @@ dashLbl = tk.Label(summary_page, text = "Dashboard", font = largeFont)
 dashLbl.place(relx= 0.5, rely = 0.05, anchor= tk.CENTER)
 
 historyLbl = tk.Label(full_history_page, text = "Full Transaction History", font = largeFont)
-historyLbl.grid(row=0, column=0, columnspan=3, sticky="n") # grid so table can be created with a loop as grid
+historyLbl.place(relx = 0.5, rely = 0.05, anchor = tk.CENTER) 
 
-
-full_history_page.grid_columnconfigure(0, weight=1) 
-full_history_page.grid_columnconfigure(1, weight=1)  #  makes columns wider so text is centered when blank
-full_history_page.grid_columnconfigure(2, weight=1)  
 
 def quitApplication(): # doesnt end runtime by default when closing
     root.quit()
