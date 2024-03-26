@@ -8,7 +8,7 @@ from tkcalendar import DateEntry # for date of transaction
 from matplotlib.widgets import RangeSlider  # slider for dates when filtering graphs gonna add
 import datetime # helps filter the dates
 root = tk.Tk()
-#accountDetails = [{}]
+
 root.geometry("1280x720")
 root.title("Personal Finance Tracker")
 
@@ -18,8 +18,12 @@ greeting_page = ttk.Frame(notebook, width= 1280, height = 720)
 greeting_page.pack(expand= True, fill= "both")
 home_page = ttk.Frame(notebook, width= 1280, height = 720)
 home_page.pack(expand=True, fill="both")
-summary_page = ttk.Frame(notebook, width= 1280, height = 720)
-summary_page.pack(expand=True, fill="both")
+pie_chart_page = ttk.Frame(notebook, width= 1280, height = 720)
+pie_chart_page.pack(expand=True, fill="both")
+
+bar_graph_page = ttk.Frame(notebook, width = 1280, height= 720)
+bar_graph_page.pack(expand= True, fill = "both")
+
 full_history_page = ttk.Frame(notebook, width= 1280, height= 720)
 full_history_page.pack(expand=True, fill="both")
 
@@ -31,7 +35,8 @@ transaction_page = ttk.Frame(root, width = 1280, height= 720)
 # transaction_page.pack(expand= True, fill= "both")
 notebook.add(greeting_page, text = "Greeting")
 notebook.add(home_page, text = "Home")
-notebook.add(summary_page, text = "Summary")
+notebook.add(pie_chart_page, text = "Pie Chart")
+notebook.add(bar_graph_page, text= "Bar Chart")
 notebook.add(full_history_page, text = "Full Transaction History")
 notebook.add(transaction_page, text="Report Transactions")
 notebook.add(delete_transaction_page, text = "Delete Transaction")
@@ -41,6 +46,7 @@ notebook.hide(2)
 notebook.hide(3)
 notebook.hide(4)
 notebook.hide(5)
+notebook.hide(6)
 
 largestFont = ("Roboto", 36)
 largeFont = ("Roboto", 28)
@@ -55,24 +61,22 @@ def onResize(event): # makes the tabs change size with window
     curHeight = event.height
     notebook.config(width=curWidth, height=curHeight)
 
-def showHomePage():
+def showHomePage(): # after they enter name, leave that page and show the rest
     notebook.add(home_page, text = "Home")
-    notebook.add(summary_page, text = "Summary")
+    notebook.add(pie_chart_page, text = "Pie Chart")
+    notebook.add(bar_graph_page, text = "Bar Chart")
+
     notebook.add(full_history_page, text = "Full Transaction History")
     notebook.select(1)
 
 
 def showName():
     userName = nameEntry.get()
-    # enterNameLbl.config(text= "Welcome " + userName)
-    # nameEntry.place_forget()
-    # submitName.place_forget()
-
     nameHome = tk.Label(home_page, font = smallFont )
     if len(userName) != 0: # if the entry for user name is empty
         nameHome.config(text = userName + "'s personal finance tracker",)
     else:
-        nameHome.config(text = "Your personal finance tracker")
+        nameHome.config(text = "Your personal finance tracker") # no name, just say this
     
     nameHome.place(relx = 0.0125, rely = 0.025, anchor= "w") # anchored west since some names are longer so it always shows the name
 enterNameLbl = tk.Label(greeting_page, text = "Enter your name ", font = largeFont)
@@ -158,18 +162,18 @@ categoryText.place(relx = 0.575, rely = 0.55, anchor = tk.CENTER)
 dateText.place(relx= 0.7, rely = 0.55, anchor = tk.CENTER)
 sourcePayeeText.place(relx= 0.825, rely = 0.55, anchor= tk.CENTER)
 
-def giveTags(): # just place them all together since there are a lot
-    transactionTextBox.tag_configure("income", foreground="green", justify = tk.CENTER)
-    transactionTextBox.tag_configure("expense", foreground="red", justify = tk.CENTER)
-    payeeAndSourceList.tag_configure("basic", justify=tk.CENTER) # basic is just a default tag i made to center the text
-    transHistoryList.tag_configure("basic", justify=tk.CENTER)
-    tranIDText.tag_configure("basic", justify=tk.CENTER)
-    tranTypeText.tag_configure("basic", justify=tk.CENTER)
-    tranValueText.tag_configure("basic", justify=tk.CENTER)
-    categoryText.tag_configure("basic", justify=tk.CENTER)
-    dateText.tag_configure("basic", justify=tk.CENTER)
-    sourcePayeeText.tag_configure("basic", justify=tk.CENTER)
-    
+
+transactionTextBox.tag_configure("income", foreground="green", justify = tk.CENTER)
+transactionTextBox.tag_configure("expense", foreground="red", justify = tk.CENTER)
+payeeAndSourceList.tag_configure("basic", justify=tk.CENTER) # basic is just a default tag i made to center the text
+transHistoryList.tag_configure("basic", justify=tk.CENTER)
+tranIDText.tag_configure("basic", justify=tk.CENTER)
+tranTypeText.tag_configure("basic", justify=tk.CENTER)
+tranValueText.tag_configure("basic", justify=tk.CENTER)
+categoryText.tag_configure("basic", justify=tk.CENTER)
+dateText.tag_configure("basic", justify=tk.CENTER)
+sourcePayeeText.tag_configure("basic", justify=tk.CENTER)
+
 
 # storing all tk.Texts in list since same actions always apply on them so i can just loop
 tableTextBoxes = [tranIDText, tranTypeText, tranValueText, categoryText, dateText, sourcePayeeText,payeeAndSourceList, transHistoryList, transactionTextBox]
@@ -185,22 +189,37 @@ def clearTables(): # if u just insert the text will always duplicate, must clear
         widget.config(state= tk.NORMAL)
         widget.delete(1.0, tk.END)
 
+def updateBarGraph():
+    figure2 = plt.figure()
+    canvas2 = FigureCanvasTkAgg(figure2, bar_graph_page )
 
+    canvas2.get_tk_widget().place(relx= 0.5, rely = 0.5, anchor= tk.CENTER)
 
-def updateGraph(): # updates both no matter what so they both always show
+    plt.subplot(1,2,1)
+    barIncLabels = list(incomeGained.keys())
+    barIncSizes = list(incomeGained.values())
+    plt.bar(barIncLabels, barIncSizes)
+    plt.title("Income Bar Graph")
+
+    plt.subplot(1,2,2)
+    barExpLabels = list(expenseSpent.keys())
+    barExpSizes = list(expenseSpent.values())
+    plt.bar(barExpLabels, barExpSizes)
+
+def updatePieChart(): # updates both no matter what so they both always show
     fig = plt.figure() # has to remake from scratch so they dont just draw them over eachother 
-    canvas = FigureCanvasTkAgg(fig, summary_page,)
+    canvas = FigureCanvasTkAgg(fig, pie_chart_page)
 
     canvas.get_tk_widget().place(relx=0.5, rely=0.5, anchor= tk.CENTER)
     plt.subplot(1,2,1)
-    labels = list(incomeGained.keys())
-    sizes = list(incomeGained.values())
-    plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
+    pieIncLabels = list(incomeGained.keys())
+    pieIncLizes = list(incomeGained.values())
+    plt.pie(pieIncLizes, labels=pieIncLabels, autopct='%1.1f%%', startangle=90)
     plt.title("Income Pie Chart")
     plt.subplot(1,2,2)
-    labels = list(expenseSpent.keys())
-    sizes = list(expenseSpent.values())
-    plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
+    pieExpLabels = list(expenseSpent.keys())
+    pieExpSizes = list(expenseSpent.values())
+    plt.pie(pieExpSizes, labels=pieExpLabels, autopct='%1.1f%%', startangle=90)
     plt.title("Expense Pie Chart")
 
     # date list should type should be converted then can be sorted by python built in
@@ -266,8 +285,8 @@ def addIncome(): # once income is added new balance is calculated
 
     incType = incomeOptionChosen.get() # type for the dictionary ie from salary, pension ...
     source = incomeSourceEntry.get()
-    if incType not in incomeTypes or incomeEntry.get().isnumeric() == False: 
-        # if they didnt pick a type from options possible like the default value, or didnt put a number
+    if incType not in incomeTypes or incomeEntry.get().isnumeric() == False or not source: 
+        # if they didnt pick a type from options possible like the default value, or didnt put a number, or didnt put a source
         errorMessage()
     else:
         if incType not in incomeGained:
@@ -287,14 +306,14 @@ def addIncome(): # once income is added new balance is calculated
 
         noTransactionTypeBtn.place(relx = 0.5, rely = 0.3, anchor= tk.CENTER)
         notebook.select(1)
-        notebook.hide(4)
+        notebook.hide(5)
         updateBalance() # updates visual balance on top and history lists since they dont auto change
 
 def addExpense(): # same as income but expense
     global balance
     expType = expenseOptionChosen.get()
     payee = expensePayeeEntry.get()
-    if expType not in expenseTypes or expenseEntry.get().isnumeric() == False:
+    if expType not in expenseTypes or expenseEntry.get().isnumeric() == False or not payee:
         errorMessage()
     else:
         if expType not in expenseSpent:
@@ -313,11 +332,12 @@ def addExpense(): # same as income but expense
 
         noTransactionTypeBtn.place(relx = 0.5, rely = 0.3, anchor= tk.CENTER)
         notebook.select(1)
-        notebook.hide(4)
+        notebook.hide(5)
         updateBalance()
  
 def updateBalance(): 
-    updateGraph() # updates graph with it
+    updateBarGraph()
+    updatePieChart() # updates graphs with it
 
     print(fullTransactionData)
     global balance
@@ -371,7 +391,7 @@ def submissionRemove(tType):
 # buttons to report income starting actions, and submit button, each with functions
 def showTransactionPageType(event):
     notebook.add(transaction_page, text="Report Transactions")
-    notebook.select(4)
+    notebook.select(5)
     if transactionChosen.get() == "Income":
         showIncomeBox()
     elif transactionChosen.get() == "Expense":
@@ -381,7 +401,7 @@ def showTransactionPageType(event):
 
 def showDeleteTransactionPage():
     notebook.add(delete_transaction_page, text = "Delete Transaction")
-    notebook.select(5)
+    notebook.select(6)
     deleteTransactionPageLbl.place(relx = 0.5, rely = 0.05, anchor= tk.CENTER)
     deletingDescriptionLbl.place(relx = 0.5, rely =0.25, anchor= tk.CENTER)
     deleteTransactionIDEntry.place(relx = 0.5, rely = 0.4, anchor= tk.CENTER)
@@ -412,15 +432,13 @@ def deleteTransaction():
             print(fullTransactionData, "THIS IS BEFORE")
             fullTransactionData.remove(dictionary)
             print(fullTransactionData, "THIS IS AFTER")
-            updateBalance()
+            updateBalance() 
             hasFoundSolution = True
             break
     if(hasFoundSolution):
         showDeleteStatus("success")
     else:
         showDeleteStatus("failure")
-
-
     deleteTransactionIDEntry.delete(0,tk.END)
     notebook.select(1) # clears the entry box and goes back to home page
 
@@ -443,7 +461,6 @@ transactionTypeReportingLbl = tk.Label(transaction_page, font = largeFont)
 
 noTransactionTypeBtn = tk.Button(transaction_page, text = "It seems like you don't have a transaction type chosen\n Click here to go to home page",
                                  font = largeFont, borderwidth=0, command= lambda: notebook.select(1))
-noTransactionTypeBtn.place(relx = 0.5, rely = 0.3, anchor= tk.CENTER)
 
 
 submitIncomeButton = tk.Button(transaction_page, font = mediumFont, text="Submit",command=lambda: [addIncome(),submissionRemove("increase")])  
@@ -452,7 +469,7 @@ submitExpenseButton = tk.Button(transaction_page,font = mediumFont, text="Submit
 
 #dropdown menues
 incomeOptionChosen = tk.StringVar(value = "Select Income Type")
-incomeDropdown = tk.OptionMenu(transaction_page, incomeOptionChosen, *incomeTypes) # like *args, taking in all income types for dropdown
+incomeDropdown = tk.OptionMenu(transaction_page, incomeOptionChosen, *incomeTypes) # like *args, taking in all income types for dropdown from list
 incomeDropdown.config(font = mediumFont)
 
 
@@ -486,10 +503,10 @@ deleteTransactionIDEntry = tk.Entry(delete_transaction_page, font= mediumFont)
 submitDeletionBtn = tk.Button(delete_transaction_page, text = "Submit", font= mediumFont, command= deleteTransaction)
 
 
-#2ND PAGE PLT
-dashLbl = tk.Label(summary_page, text = "Dashboard", font = largeFont)
-dashLbl.place(relx= 0.5, rely = 0.05, anchor= tk.CENTER)
+pieChartsLbl = tk.Label(pie_chart_page, text = "Pie Charts", font = largeFont)
+pieChartsLbl.place(relx= 0.5, rely = 0.05, anchor= tk.CENTER)
 
+barGraphsLbl = tk.Label(bar_graph_page, text = "Bar Gra")
 historyLbl = tk.Label(full_history_page, text = "Full Transaction History", font = largeFont)
 historyLbl.place(relx = 0.5, rely = 0.05, anchor = tk.CENTER) 
 
