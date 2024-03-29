@@ -180,7 +180,7 @@ tableTextBoxes = [tranIDText, tranTypeText, tranValueText, categoryText, dateTex
 def disableTables(): # makes the textboxes for full tables not editable by user
     for widget in tableTextBoxes:
         widget.config(state= tk.DISABLED)
-disableTables()
+disableTables() # calls one it first time so user cant edit right away
 
 
 def clearTables(): # if u just insert the text will always duplicate, must clear then add
@@ -193,10 +193,12 @@ def updateBarGraph():
     figure2 = plt.figure()
     canvas2 = FigureCanvasTkAgg(figure2, bar_graph_page )
 
-    canvas2.get_tk_widget().place(relx= 0.5, rely = 0.5, anchor= tk.CENTER)
+    canvas2.get_tk_widget().place(relx= 0.5, rely = 0.5, anchor= tk.CENTER) # place the canvas as a tkinter widget
 
-    plt.subplot(1,2,1)
+    plt.subplot(1,2,1) # where the graph will be placed on it
+
     barIncLabels = list(incomeGained.keys())
+    # barIncLabels = []
     barIncSizes = list(incomeGained.values())
     plt.bar(barIncLabels, barIncSizes)
     plt.title("Income Bar Graph")
@@ -416,6 +418,8 @@ def showDeleteStatus(status):
 def deleteTransaction():
     global fullTransactionData
     global balance
+    global incomeGained
+    global expenseSpent # delete from these so the graphs look right too
     transactionIDToDelete = deleteTransactionIDEntry.get()
     if len(transactionIDToDelete) !=4: # can only check length on string
         errorMessage()
@@ -423,11 +427,18 @@ def deleteTransaction():
     transactionIDToDelete = int(transactionIDToDelete) # convert entry to int for filtering dictionary
     hasFoundSolution = False
     for dictionary in fullTransactionData:
+        dictCategory = dictionary["category"]
         if dictionary["transaction_id"] == transactionIDToDelete:
             if dictionary["transaction_type"] == "income":
                     balance-= int(dictionary["transaction_value"]) # if they are deleting an income, subtract balance by that ammount
+                    incomeGained[dictCategory] -= int(dictionary["transaction_value"]) # subtract value from the category for charts
+                    if incomeGained[dictCategory] == 0:
+                        del incomeGained[dictCategory]
             elif dictionary["transaction_type"] == "expense":
                     balance+= int(dictionary["transaction_value"]) # if they are deleting an expense, add balance by that ammount
+                    expenseSpent[dictCategory] -= int(dictionary["transaction_value"])
+                    if expenseSpent[dictCategory]== 0:
+                        del expenseSpent[dictCategory]
             
             print(fullTransactionData, "THIS IS BEFORE")
             fullTransactionData.remove(dictionary)
