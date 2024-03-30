@@ -257,6 +257,7 @@ def showIncomeBox(): # function for button to add income,  calls the entry box a
     incomeDateLbl.place(relx = 0.35, rely = 0.315, anchor= tk.CENTER)
     incomeSourceEntry.place(relx = 0.5, rely = 0.55, anchor = tk.CENTER)
     incomeSourceLbl.place(relx = 0.5, rely = 0.5, anchor= tk.CENTER)
+    currencyLbl.place(rely = 0.35, relx =0.55, anchor = tk.CENTER)
 
 def errorMessage(): # if an error arises this function is called, ie a string inputted instead of int
     messagebox.showerror('Invalid Input', "Please enter a valid input")
@@ -272,6 +273,7 @@ def showExpenseBox(): # function for button to add income,  calls the entry box 
     expenseDateLbl.place(relx = 0.35, rely = 0.315, anchor= tk.CENTER)
     expensePayeeEntry.place(relx = 0.5, rely = 0.55, anchor= tk.CENTER)
     expensePayeeLbl.place(relx= 0.5, rely = 0.5, anchor = tk.CENTER)
+    currencyLbl.place(rely = 0.35, relx =0.55, anchor = tk.CENTER)
 
 usedIDS = set() # how to ensure ids are unique
 def generateRandomID():
@@ -341,7 +343,7 @@ def updateBalance():
     updateBarGraph()
     updatePieChart() # updates graphs with it
 
-    print(fullTransactionData)
+    # print(fullTransactionData)
     global balance
     balanceLbl.config(text="Balance:\n "+ str(balance)+"$", justify = tk.CENTER) # the balance at the top is updated with new value
  
@@ -376,7 +378,7 @@ def submissionRemove(tType):
         incomeSourceEntry.delete(0, tk.END)
         incomeSourceEntry.place_forget()
         incomeSourceLbl.place_forget()
-
+        currencyLbl.place_forget()
     else: # clears the expense widgets 
         submitExpenseButton.place_forget()
         expenseEntry.delete(0,tk.END)
@@ -388,9 +390,10 @@ def submissionRemove(tType):
         expensePayeeEntry.delete(0, tk.END)
         expensePayeeEntry.place_forget()
         expensePayeeLbl.place_forget()
-
+        currencyLbl.place_forget()
 
 # buttons to report income starting actions, and submit button, each with functions
+# event just means when anything occurs, isnt required to get value itself
 def showTransactionPageType(event):
     notebook.add(transaction_page, text="Report Transactions")
     notebook.select(5)
@@ -400,7 +403,6 @@ def showTransactionPageType(event):
         showExpenseBox()
     transactionChosen.set("Select Transaction Type")
 
-
 def showDeleteTransactionPage():
     notebook.add(delete_transaction_page, text = "Delete Transaction")
     notebook.select(6)
@@ -409,12 +411,11 @@ def showDeleteTransactionPage():
     deleteTransactionIDEntry.place(relx = 0.5, rely = 0.4, anchor= tk.CENTER)
     submitDeletionBtn.place(relx = 0.5, rely = 0.5 , anchor = tk.CENTER)
 
-
 def showDeleteStatus(status):
     if status == "success":
         messagebox.showinfo("Sucess", "Sucessfully Deleted Transaction")
     elif status == "failure":
-        messagebox.showinfo("Unsucsessful", "Unable to Find Transaction")
+        messagebox.showinfo("Unsucessful", "Unable to Find Transaction")
 def deleteTransaction():
     global fullTransactionData
     global balance
@@ -423,7 +424,6 @@ def deleteTransaction():
     transactionIDToDelete = deleteTransactionIDEntry.get()
     if len(transactionIDToDelete) !=4: # can only check length on string
         errorMessage()
-
     transactionIDToDelete = int(transactionIDToDelete) # convert entry to int for filtering dictionary
     hasFoundSolution = False
     for dictionary in fullTransactionData:
@@ -440,9 +440,9 @@ def deleteTransaction():
                     if expenseSpent[dictCategory]== 0:
                         del expenseSpent[dictCategory]
             
-            print(fullTransactionData, "THIS IS BEFORE")
+            # print(fullTransactionData, "THIS IS BEFORE")
             fullTransactionData.remove(dictionary)
-            print(fullTransactionData, "THIS IS AFTER")
+            # print(fullTransactionData, "THIS IS AFTER")
             updateBalance() 
             hasFoundSolution = True
             break
@@ -453,6 +453,13 @@ def deleteTransaction():
     deleteTransactionIDEntry.delete(0,tk.END)
     notebook.select(1) # clears the entry box and goes back to home page
 
+def tableToTextFile(graphDictionary):# prints what the graph shows into the text file
+    file = open("GraphDetails.txt", "a") # creates or appends to file
+    for key in graphDictionary:
+        file.write(str(key) + ": " + str(graphDictionary[key]) + "\n") # so if goes with incomeGained dict, will out put category and amount
+        # such like salary: 140
+    file.close() # closes file after
+
 reportTransactionLbl = tk.Label(home_page, text= "Report Transaction:", font = largeFont)
 reportTransactionLbl.place(relx = 0.5, rely = 0.3, anchor= tk.CENTER)
         
@@ -462,14 +469,14 @@ transactionDropdown = tk.OptionMenu(home_page, transactionChosen, *transactionTy
 transactionDropdown.config(font = mediumFont)
 transactionDropdown.place(relx = 0.5, rely = 0.375, anchor= tk.CENTER)
 
-
+currencyLbl = tk.Label(transaction_page, text = "£", font = mediumFont)
 transactionPageTitle = tk.Label(transaction_page, text = "Transaction Page", font = largestFont)
 transactionPageTitle.place(relx= 0.5, rely = 0.05, anchor= tk.CENTER)
 
 # if on report income it just titles the page such and same for expense
 transactionTypeReportingLbl = tk.Label(transaction_page, font = largeFont)
 
-
+# page can show when it shouldnt, this message is shown instead
 noTransactionTypeBtn = tk.Button(transaction_page, text = "It seems like you don't have a transaction type chosen\n Click here to go to home page",
                                  font = largeFont, borderwidth=0, command= lambda: notebook.select(1))
 
@@ -517,10 +524,13 @@ submitDeletionBtn = tk.Button(delete_transaction_page, text = "Submit", font= me
 pieChartsLbl = tk.Label(pie_chart_page, text = "Pie Charts", font = largeFont)
 pieChartsLbl.place(relx= 0.5, rely = 0.05, anchor= tk.CENTER)
 
-barGraphsLbl = tk.Label(bar_graph_page, text = "Bar Gra")
+barGraphsLbl = tk.Label(bar_graph_page, text = "Bar Graph")
 historyLbl = tk.Label(full_history_page, text = "Full Transaction History", font = largeFont)
 historyLbl.place(relx = 0.5, rely = 0.05, anchor = tk.CENTER) 
 
+showButton = tk.Button(bar_graph_page, text = "Show in File", command = lambda: (tableToTextFile(incomeGained), tableToTextFile(expenseSpent)), font = largeFont)
+# calls on both the income and expense dicts to be added to text file
+showButton.place(relx = 0.5, rely = 0.925, anchor = tk.CENTER)
 
 def quitApplication(): # doesnt end runtime by default when closing
     root.quit()
