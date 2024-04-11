@@ -5,8 +5,7 @@ import random # random transaction id
 import matplotlib.pyplot as plt # regular graphs
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg # to show on tkinter
 from tkcalendar import DateEntry # for date of transaction
-from matplotlib.widgets import RangeSlider  # slider for dates when filtering graphs gonna add
-import datetime # helps filter the dates
+
 root = tk.Tk()
 
 root.geometry("1280x720")
@@ -224,27 +223,6 @@ def updatePieChart(): # updates both no matter what so they both always show
     plt.pie(pieExpSizes, labels=pieExpLabels, autopct='%1.1f%%', startangle=90)
     plt.title("Expense Pie Chart")
 
-    # date list should type should be converted then can be sorted by python built in
-    convertedDateList = [] 
-    for transactionDate in fullDatesList:
-        convertedDateList.append(datetime.datetime.strptime(transactionDate,"%m/%d/%y"))
-    sorted_dates = sorted(convertedDateList)
-
-    # minimum and max dates from first and last index of sorted list
-    min_date = sorted_dates[0]
-    max_date = sorted_dates[-1]
-
-    # place and add the slider
-    slider_ax = fig.add_axes([0.20, 0.1, 0.60, 0.03])
-    slider = RangeSlider(slider_ax, "Date Range", 0, len(sorted_dates) - 1, valinit=(0, len(sorted_dates) - 1))
-
-    # not sure exactly but adds labels
-    slider_labels = [str(date) for date in sorted_dates]
-    slider.set_val((0, len(sorted_dates) - 1))
-    slider.valtext.set_text(f'{min_date} - {max_date}')
-
-
-
 
 def showIncomeBox(): # function for button to add income,  calls the entry box and button to submit
     noTransactionTypeBtn.place_forget() # hides the default message saying there is no transaction type
@@ -433,7 +411,8 @@ def deleteTransaction():
                     balance-= int(dictionary["transaction_value"]) # if they are deleting an income, subtract balance by that ammount
                     incomeGained[dictCategory] -= int(dictionary["transaction_value"]) # subtract value from the category for charts
                     if incomeGained[dictCategory] == 0:
-                        del incomeGained[dictCategory]
+                        del incomeGained[dictCategory] # if dictionary category is empty, ie gained from salary is 0 after deletion
+                        # remove that category from the dictionary
             elif dictionary["transaction_type"] == "expense":
                     balance+= int(dictionary["transaction_value"]) # if they are deleting an expense, add balance by that ammount
                     expenseSpent[dictCategory] -= int(dictionary["transaction_value"])
@@ -479,7 +458,6 @@ transactionTypeReportingLbl = tk.Label(transaction_page, font = largeFont)
 # page can show when it shouldnt, this message is shown instead
 noTransactionTypeBtn = tk.Button(transaction_page, text = "It seems like you don't have a transaction type chosen\n Click here to go to home page",
                                  font = largeFont, borderwidth=0, command= lambda: notebook.select(1))
-
 
 submitIncomeButton = tk.Button(transaction_page, font = mediumFont, text="Submit",command=lambda: [addIncome(),submissionRemove("increase")])  
 submitExpenseButton = tk.Button(transaction_page,font = mediumFont, text="Submit",command=lambda: [addExpense(), submissionRemove("expense")])
