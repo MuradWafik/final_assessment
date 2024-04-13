@@ -55,6 +55,8 @@ balance = 0
 welcomeLbl = tk.Label(greeting_page, text = "Welcome to the\nPersonal Finance Tracker", font = largestFont)
 welcomeLbl.place(relx=0.5, rely = 0.1, anchor= tk.CENTER)
 
+
+
 def onResize(event): # makes the tabs change size with window
     curWidth = event.width
     curHeight = event.height
@@ -102,6 +104,8 @@ transactionIdLbl = tk.Label(home_page, text= "Transaction ID", font = ["Roboto",
 transactionIdLbl.place(relx=0.9, rely= 0.45, anchor= "center")
 
 
+lastTransactionLbl = tk.Label(home_page, text = "Last Transaction Info: ", font = smallFont)
+lastTransactionLbl.place(relx = 0.5, rely = 0.85, anchor = tk.CENTER)
 
 # list for transaction and balance
 # since its tk.text i disable so user cant change but allows program to add to it and change color
@@ -324,7 +328,21 @@ def updateBalance():
     # print(fullTransactionData)
     global balance
     balanceLbl.config(text="Balance:\n "+ str(balance)+"$", justify = tk.CENTER) # the balance at the top is updated with new value
- 
+
+
+    latestTransactionDictionary = fullTransactionData[-1] # stores all the figures of the latest dictionary into a variable
+    latestTransactionInfo = "Last Transaction Info:\n" \
+                           "ID: " + str(latestTransactionDictionary["transaction_id"]) + "\n" \
+                           "Type: " + latestTransactionDictionary["transaction_type"] + "\n" \
+                           "Value: " + str(latestTransactionDictionary["transaction_value"]) + "\n" \
+                           "Category: " + latestTransactionDictionary["category"] + "\n" \
+                           "Date: " + str(latestTransactionDictionary["date"]) + "\n" \
+                           "Source/Payee: " + latestTransactionDictionary["payee/source"]
+
+
+    lastTransactionLbl.config(text=latestTransactionInfo) # makes the label show information of the latest transaction
+
+
     clearTables() # makes all text boxes blank so they can be added to again
     for dictionary in fullTransactionData: 
         # adds the values for each index at the full history table
